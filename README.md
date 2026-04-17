@@ -5,15 +5,17 @@
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
 [![Platform](https://img.shields.io/badge/platform-macOS-lightgrey)](https://www.apple.com/macos/)
 
-Local hotel price monitoring for `Ctrip` with browser-assisted page access and IM webhook notifications.
+Track Ctrip hotel prices at the room level, send alerts to your preferred IM webhook, and run everything locally with an out-of-the-box workflow.
+
+Designed for practical day-to-day monitoring, the project lets you focus on a specific room keyword, keep a full local price history, and receive notifications when prices drop or reach your target.
 
 ## Features
-- Monitor a hotel or a specific room type by keyword
-- Notify on price drop or target price hit
-- Support `Feishu` and `WeCom` robot webhooks
-- Show recent trend, all-time low, and latest low occurrence time
-- Keep full price history from now on
-- Run locally on your own machine
+- Track hotel prices at the room level with room keyword matching
+- Send alerts to `Feishu` or `WeCom`, with flexible webhook-based IM delivery
+- Notify on price drops, target-price hits, and all-time-low events in a clean local workflow
+- Show recent trend, all-time low, and the latest occurrence time of that low
+- Keep full price history going forward for each watcher
+- Run locally on macOS with ready-to-use launchers and maintenance scripts
 
 ## Screenshots / UI Summary
 Each watcher card shows:
