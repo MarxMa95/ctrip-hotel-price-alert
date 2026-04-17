@@ -1,0 +1,32 @@
+from .legacy_app import (
+    app_session_cookie_snapshot_path,
+    app_session_profile_status,
+    can_connect_app_session_debug_port,
+    ctrip_profile_has_auth_cookie,
+    ensure_app_session_profile_dir,
+    export_app_session_cookies_via_cdp,
+    finish_login_and_save_session,
+    get_live_app_session_process,
+    launch_login_and_save_session,
+    load_app_session_cookie_snapshot,
+    recent_target_url,
+    rebuild_clean_ctrip_profile_dir,
+    resolve_login_browser_executable,
+    save_app_session_cookie_snapshot,
+    session_default_target_url,
+    session_login_label,
+    startup_all_session_checks,
+    startup_session_check,
+    try_open_app_session_page_via_cdp,
+    verify_app_session,
+)
+
+__all__ = [
+    'app_session_cookie_snapshot_path', 'app_session_profile_status', 'can_connect_app_session_debug_port',
+    'ctrip_profile_has_auth_cookie', 'ensure_app_session_profile_dir', 'export_app_session_cookies_via_cdp',
+    'finish_login_and_save_session', 'get_live_app_session_process', 'launch_login_and_save_session',
+    'load_app_session_cookie_snapshot', 'recent_target_url', 'rebuild_clean_ctrip_profile_dir',
+    'resolve_login_browser_executable', 'save_app_session_cookie_snapshot', 'session_default_target_url',
+    'session_login_label', 'startup_all_session_checks', 'startup_session_check',
+    'try_open_app_session_page_via_cdp', 'verify_app_session',
+]

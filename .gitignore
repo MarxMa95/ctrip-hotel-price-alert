@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Local runtime data
+/data.db
+/logs/
+/debug_screens/
+/session_profiles/
+
+# Local editor / temp
+*.swp
+*.swo
+*.tmp
+*.bak
+
+# Optional local env files
+.env
+.env.*
+.venv/
+venv/

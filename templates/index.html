@@ -1,0 +1,834 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>携程酒店价格提醒</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <main class="page">
+    <section class="env-banner" aria-label="稳定版环境标识">
+      <strong>携程酒店提醒 · 稳定版</strong>
+      <span>当前地址：127.0.0.1:8766</span>
+    </section>
+
+    <section class="hero">
+      <div>
+        <h1>携程酒店价格提醒 · 稳定版</h1>
+        <p>复制携程酒店链接，使用携程专用会话，按你的房型关键词监控降价。</p>
+      </div>
+      <div class="hero-badge">适配：携程 · 稳定版</div>
+    </section>
+
+    <section class="card boot-card" id="settings-card">
+      <h2>监控设置</h2>
+      <form id="watcher-form">
+        <input type="hidden" name="room_type_meta" id="room_type_meta">
+        <input type="hidden" name="edit_id" id="edit_id">
+        <div class="grid">
+          <label>
+            <span>平台</span>
+            <input value="携程" disabled>
+            <input type="hidden" name="source_type" id="source_type" value="ctrip">
+          </label>
+          <label>
+            <span>你的心理价位</span>
+            <input name="threshold_price" type="number" step="0.01" placeholder="例如 3200">
+          </label>
+          <label>
+            <span>最低合理价格（防误抓）</span>
+            <input name="min_expected_price" type="number" step="0.01" placeholder="例如 2000">
+          </label>
+          <label>
+            <span>轮询间隔（分钟）</span>
+            <input name="poll_interval_minutes" type="number" step="1" min="1" placeholder="例如 5">
+          </label>
+          <label class="full">
+            <span>酒店链接</span>
+            <input name="target_url" id="target_url" placeholder="直接粘贴酒店详情页链接" required>
+          </label>
+          <label>
+            <span>任务名称</span>
+            <input name="name" placeholder="例如：普吉岛拉查酒店" required>
+          </label>
+          <label>
+            <span>酒店名称</span>
+            <input name="hotel_name" placeholder="例如：The Racha" required>
+          </label>
+          <label class="full">
+            <span>指定房型关键词</span>
+            <input name="room_type_keyword" id="room_type_keyword" placeholder="例如：水疗泳池套房">
+          </label>
+          <label class="full">
+            <span>通知 Webhook / 机器人地址</span>
+            <div class="inline-actions">
+              <select name="notify_type" id="notify_type">
+                <option value="feishu">飞书</option>
+                <option value="wechat">企业微信</option>
+              </select>
+              <input name="notify_target" id="notify_target" placeholder="填写 IM 机器人 webhook 地址，例如飞书或企业微信" required>
+              <button type="button" id="test-notify" class="secondary small">测试通知</button>
+            </div>
+          </label>
+        </div>
+
+        <div id="app-session-panel" class="session-panel">
+          <div id="session-title" class="session-title">专用登录</div>
+          <p id="session-hint" class="hint">携程使用独立专用登录态。先登录再识别房型和查询价格会更稳定。</p>
+          <div class="inline-actions compact wrap-actions">
+            <button type="button" id="start-app-login" class="secondary">登录并保存会话</button>
+            <button type="button" id="finish-app-login" class="secondary">我已登录完成</button>
+            <button type="button" id="verify-app-session" class="secondary">验证登录态</button>
+            <span id="session-status" class="status-text" aria-live="polite"></span>
+          </div>
+        </div>
+
+        <details class="advanced">
+          <summary>高级设置（通常不用填）</summary>
+          <div class="grid advanced-grid">
+            <label class="full">
+              <span>自定义请求头 JSON（高级用户才需要）</span>
+              <textarea name="request_headers" id="request_headers" rows="4" placeholder='例如：{"User-Agent":"Mozilla/..."}'></textarea>
+            </label>
+            <label class="full">
+              <span>自定义价格正则</span>
+              <input name="price_pattern" id="price_pattern" placeholder="通常不用填">
+            </label>
+          </div>
+        </details>
+
+        <p id="preset-hint" class="hint"></p>
+        <div class="actions actions-row">
+          <button type="submit" id="submit-btn">开始监控</button>
+          <button type="button" id="cancel-edit-btn" class="secondary" hidden>取消编辑</button>
+          <span id="form-status" class="status-text" aria-live="polite"></span>
+        </div>
+      </form>
+    </section>
+
+    <section id="debug-panel" class="card debug-panel" hidden>
+      <div class="list-head">
+        <h2>诊断信息</h2>
+        <div class="inline-actions compact">
+          <button id="copy-debug" class="secondary">复制全部诊断信息</button>
+          <button id="hide-debug" class="secondary">收起</button>
+        </div>
+      </div>
+      <p class="hint">遇到问题时，把下面内容复制给我，定位会更快。</p>
+      <pre id="debug-output" class="debug-output"></pre>
+    </section>
+
+    <section class="card boot-card" id="watchers-card">
+      <div class="list-head">
+        <h2>监控列表</h2>
+        <div class="inline-actions compact">
+          <button id="refresh-btn" class="secondary">刷新</button>
+          <span id="list-status" class="status-text" aria-live="polite"></span>
+        </div>
+      </div>
+      <p id="meta" class="hint"></p>
+      <p id="build-info" class="hint">页面版本：2026-04-07-ctrip-price-card-v1</p>
+      <div id="watcher-list" class="list"></div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script>
+    const presets = {};
+    let currentWatchers = [];
+    const pendingWatcherActions = new Map();
+    let toastTimer = null;
+    let latestDebugText = '';
+
+    function sectionButtonIds(section) {
+      if (section === 'settings') {
+        return ['test-notify', 'start-app-login', 'finish-app-login', 'verify-app-session', 'submit-btn', 'cancel-edit-btn'];
+      }
+      if (section === 'watchers') {
+        return ['refresh-btn'];
+      }
+      return [];
+    }
+
+    function setSectionControlsDisabled(section, disabled) {
+      sectionButtonIds(section).forEach((id) => {
+        const button = document.getElementById(id);
+        if (!button) return;
+        if (disabled) {
+          button.dataset.sectionDisabled = '1';
+          button.disabled = true;
+        } else if (button.dataset.sectionDisabled === '1') {
+          delete button.dataset.sectionDisabled;
+          button.disabled = button.classList.contains('is-loading');
+        }
+      });
+    }
+
+    function setSectionBooting(section, isBooting) {
+      const card = document.getElementById(section === 'settings' ? 'settings-card' : 'watchers-card');
+      if (!card) return;
+      card.classList.toggle('is-booting', Boolean(isBooting));
+      setSectionControlsDisabled(section, Boolean(isBooting));
+    }
+
+    async function request(url, options = {}) {
+      let response;
+      try {
+        response = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...options });
+      } catch (networkError) {
+        const error = new Error('网页没连上本地服务。请先重新双击“酒店提醒-一键启动最稳定版.command”。');
+        error.debug = null;
+        throw error;
+      }
+      const data = await response.json();
+      if (!response.ok) {
+        const error = new Error(data.error || '请求失败');
+        error.debug = data.debug || data.page_debug || null;
+        throw error;
+      }
+      return data;
+    }
+
+    function fmtPrice(currency, value) {
+      if (value === null || value === undefined || value === '') return '未检测';
+      return `${currency} ${Number(value).toFixed(2)}`;
+    }
+
+
+    function fmtDateTimeUtc8(value) {
+      if (!value) return '从未检查';
+      const normalized = String(value).replace(' UTC', 'Z').replace(' ', 'T');
+      const date = new Date(normalized);
+      if (Number.isNaN(date.getTime())) return value;
+      return new Intl.DateTimeFormat('zh-CN', {
+        timeZone: 'Asia/Shanghai',
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+        hour12: false,
+      }).format(date) + ' UTC+8';
+    }
+
+
+    function parseUtcValue(value) {
+      if (!value) return null;
+      const normalized = String(value).replace(' UTC', 'Z').replace(' ', 'T');
+      const date = new Date(normalized);
+      return Number.isNaN(date.getTime()) ? null : date;
+    }
+
+    function fmtCountdown(value) {
+      const date = parseUtcValue(value);
+      if (!date) return '';
+      const diffSeconds = Math.round((date.getTime() - Date.now()) / 1000);
+      if (diffSeconds <= 0) return '（即将检查）';
+      const hours = Math.floor(diffSeconds / 3600);
+      const minutes = Math.floor((diffSeconds % 3600) / 60);
+      const seconds = diffSeconds % 60;
+      const parts = [];
+      if (hours > 0) parts.push(`${hours}小时`);
+      if (minutes > 0 || hours > 0) parts.push(`${minutes}分`);
+      parts.push(`${seconds}秒后`);
+      return `（约 ${parts.join(' ')}）`;
+    }
+
+    function resetFormMode() {
+      document.getElementById('edit_id').value = '';
+      document.getElementById('submit-btn').textContent = '开始监控';
+      document.getElementById('cancel-edit-btn').hidden = true;
+      setStatus('form-status', '');
+    }
+
+    function fillFormForEdit(item) {
+      document.getElementById('edit_id').value = item.id;
+      document.getElementById('source_type').value = item.source_type || 'ctrip';
+      document.getElementById('target_url').value = item.target_url || '';
+      document.querySelector('input[name="threshold_price"]').value = item.threshold_price ?? '';
+      document.querySelector('input[name="min_expected_price"]').value = item.min_expected_price ?? '';
+      document.querySelector('input[name="poll_interval_minutes"]').value = item.poll_interval_minutes ?? 5;
+      document.querySelector('input[name="name"]').value = item.name || '';
+      document.querySelector('input[name="hotel_name"]').value = item.hotel_name || '';
+      document.getElementById('room_type_keyword').value = item.room_type_keyword || '';
+      document.getElementById('room_type_meta').value = item.room_type_meta || '';
+      document.getElementById('notify_type').value = item.notify_type || 'feishu';
+      document.getElementById('notify_target').value = item.notify_target || '';
+      document.getElementById('request_headers').value = item.request_headers || '{}';
+      document.getElementById('price_pattern').value = item.price_pattern || '';
+      document.getElementById('submit-btn').textContent = '保存修改';
+      document.getElementById('cancel-edit-btn').hidden = false;
+      updateLoginPanel();
+      setStatus('form-status', `正在编辑：${item.name}`);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.hidden = false;
+      toast.classList.toggle('error', isError);
+      toast.classList.toggle('success', !isError);
+      window.clearTimeout(toastTimer);
+      toastTimer = window.setTimeout(() => { toast.hidden = true; }, 2600);
+    }
+
+    function setButtonLoading(button, loadingText) {
+      if (!button) return () => {};
+      const originalText = button.dataset.originalText || button.textContent;
+      button.dataset.originalText = originalText;
+      button.disabled = true;
+      button.classList.add('is-loading');
+      button.textContent = loadingText;
+      return () => {
+        button.disabled = false;
+        button.classList.remove('is-loading');
+        button.textContent = button.dataset.originalText || originalText;
+      };
+    }
+
+    function pendingActionKey(id, action) {
+      return `${id}:${action}`;
+    }
+
+    function markWatcherActionPending(id, action, loadingText) {
+      pendingWatcherActions.set(pendingActionKey(id, action), { loadingText });
+      renderWatchers();
+    }
+
+    function clearWatcherActionPending(id, action) {
+      pendingWatcherActions.delete(pendingActionKey(id, action));
+      renderWatchers();
+    }
+
+    function getWatcherActionState(id, action) {
+      return pendingWatcherActions.get(pendingActionKey(id, action)) || null;
+    }
+
+    function watcherActionAttrs(id, action, baseClass = '') {
+      const state = getWatcherActionState(id, action);
+      const classes = [baseClass].filter(Boolean);
+      if (state) classes.push('is-loading');
+      const classAttr = classes.length ? ` class="${classes.join(' ')}"` : '';
+      const disabledAttr = state ? ' disabled' : '';
+      return `${classAttr}${disabledAttr}`;
+    }
+
+    function watcherActionText(id, action, fallback) {
+      return getWatcherActionState(id, action)?.loadingText || fallback;
+    }
+
+    function setStatus(elementId, text = '', isError = false) {
+      const element = document.getElementById(elementId);
+      if (!element) return;
+      element.textContent = text;
+      element.classList.toggle('error', Boolean(isError));
+      element.classList.toggle('success', Boolean(text) && !isError);
+    }
+
+    function clearDebug() {
+      latestDebugText = '';
+      document.getElementById('debug-panel').hidden = true;
+      document.getElementById('debug-output').textContent = '';
+    }
+
+    function renderDebug(error, context = {}) {
+      const panel = document.getElementById('debug-panel');
+      const output = document.getElementById('debug-output');
+      const debug = error?.debug || null;
+      const pageDebug = debug?.page_debug || null;
+      const payload = { time: new Date().toISOString(), message: error?.message || '未知错误', context, debug };
+      latestDebugText = JSON.stringify(payload, null, 2);
+      const summary = [];
+      if (pageDebug) {
+        summary.push(`页面标题: ${pageDebug.title || '(空)'}`);
+        summary.push(`最终链接: ${pageDebug.final_url || '(空)'}`);
+        summary.push(`房型块数量: ${pageDebug.room_block_count ?? 0}`);
+      }
+      output.textContent = (summary.length ? summary.join('\n') + '\n\n' : '') + latestDebugText;
+      panel.hidden = false;
+    }
+
+    function renderTags(tags = []) {
+      if (!tags.length) return '<span class="tag muted">无附加标签</span>';
+      return tags.map((tag) => `<span class="tag">${tag}</span>`).join('');
+    }
+
+    function fmtShortTimeUtc8(value) {
+      const date = parseUtcValue(value);
+      if (!date) return '--:--';
+      return new Intl.DateTimeFormat('zh-CN', {
+        timeZone: 'Asia/Shanghai',
+        hour: '2-digit', minute: '2-digit', hour12: false,
+      }).format(date);
+    }
+
+    function fmtFullTimeUtc8(value) {
+      const date = parseUtcValue(value);
+      if (!date) return '--';
+      return new Intl.DateTimeFormat('zh-CN', {
+        timeZone: 'Asia/Shanghai',
+        month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+        hour12: false,
+      }).format(date);
+    }
+
+
+    function historicalLowInfo(history = []) {
+      const items = (history || [])
+        .map((item) => ({ price: Number(item.price), checked_at: item.checked_at }))
+        .filter((item) => Number.isFinite(item.price));
+      if (!items.length) return null;
+      let lowItem = items[0];
+      for (const item of items) {
+        if (item.price < lowItem.price) lowItem = item;
+      }
+      return lowItem;
+    }
+
+    function renderSparkline(history = []) {
+      if (!history.length) return '<div class="spark-empty">暂无历史价格</div>';
+      const items = history
+        .map((item) => ({ price: Number(item.price), checked_at: item.checked_at }))
+        .filter((item) => Number.isFinite(item.price));
+      if (!items.length) return '<div class="spark-empty">暂无历史价格</div>';
+      const values = items.map((item) => item.price);
+      const width = 280;
+      const height = 132;
+      const leftPad = 48;
+      const rightPad = 16;
+      const topPad = 14;
+      const bottomPad = 34;
+      const plotWidth = width - leftPad - rightPad;
+      const plotHeight = height - topPad - bottomPad;
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+      const span = Math.max(max - min, 1);
+      const yMid = min + span / 2;
+      const getX = (index) => items.length === 1 ? leftPad + plotWidth / 2 : leftPad + (index * plotWidth) / (items.length - 1);
+      const getY = (price) => topPad + plotHeight - ((price - min) / span) * plotHeight;
+      const points = items.map((item, index) => `${getX(index)},${getY(item.price)}`).join(' ');
+      const last = items[items.length - 1];
+      const first = items[0];
+      const yTicks = [max, yMid, min].map((value) => ({ value, y: getY(value) }));
+      const lastPriceLabel = Number.isFinite(last.price) ? `¥${Math.round(last.price)}` : '';
+      const gradientId = `spark-gradient-${Math.random().toString(36).slice(2, 8)}`;
+      return `
+        <div class="chart-wrap">
+          <div class="chart-caption">横轴：检查时间　纵轴：价格（CNY）</div><div class="chart-tooltip" hidden>悬停点位查看详情</div>
+          <svg class="sparkline" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img" aria-label="价格趋势图">
+            <defs>
+              <linearGradient id="${gradientId}" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="rgba(37,99,235,0.22)" />
+                <stop offset="100%" stop-color="rgba(37,99,235,0.02)" />
+              </linearGradient>
+            </defs>
+            ${yTicks.map((tick) => `<line x1="${leftPad}" y1="${tick.y}" x2="${leftPad + plotWidth}" y2="${tick.y}" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3" />`).join('')}
+            <line x1="${leftPad}" y1="${topPad}" x2="${leftPad}" y2="${topPad + plotHeight}" stroke="#94a3b8" stroke-width="1" />
+            <line x1="${leftPad}" y1="${topPad + plotHeight}" x2="${leftPad + plotWidth}" y2="${topPad + plotHeight}" stroke="#94a3b8" stroke-width="1" />
+            ${yTicks.map((tick) => `<text x="6" y="${tick.y + 4}" font-size="10" fill="#64748b">¥${Math.round(tick.value)}</text>`).join('')}
+            <polygon fill="url(#${gradientId})" points="${points} ${getX(items.length - 1)},${topPad + plotHeight} ${getX(0)},${topPad + plotHeight}" />
+            <polyline fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="${points}" />
+            ${items.map((item, index) => `
+              <g class="spark-point-group">
+                <circle cx="${getX(index)}" cy="${getY(item.price)}" r="2.5" fill="#2563eb" />
+                <circle
+                  class="spark-hotspot"
+                  cx="${getX(index)}"
+                  cy="${getY(item.price)}"
+                  r="8"
+                  fill="transparent"
+                  data-price="${Math.round(item.price)}"
+                  data-time="${fmtFullTimeUtc8(item.checked_at)}"
+                >
+                  <title>${fmtFullTimeUtc8(item.checked_at)} · ¥${Math.round(item.price)}</title>
+                </circle>
+              </g>`).join('')}
+            <text x="${leftPad + plotWidth - 2}" y="${topPad + 10}" text-anchor="end" font-size="10" fill="#1d4ed8">最新 ${lastPriceLabel}</text>
+            <text x="${leftPad}" y="${height - 10}" font-size="10" fill="#64748b">${fmtShortTimeUtc8(first.checked_at)}</text>
+            <text x="${leftPad + plotWidth / 2}" y="${height - 10}" text-anchor="middle" font-size="10" fill="#94a3b8">时间</text>
+            <text x="${leftPad + plotWidth}" y="${height - 10}" text-anchor="end" font-size="10" fill="#64748b">${fmtShortTimeUtc8(last.checked_at)}</text>
+          </svg>
+        </div>`;
+    }
+
+    function updatePresetHint() {
+      const sourceType = document.getElementById('source_type').value;
+      const preset = presets[sourceType];
+      document.getElementById('preset-hint').textContent = preset?.tip || '';
+    }
+
+    async function loadPresets() {
+      const data = await request('/api/source-presets');
+      (data.items || []).forEach((item) => presets[item.key] = item);
+      updatePresetHint();
+    }
+
+    function currentSessionPlatform() {
+      return 'ctrip';
+    }
+
+    function sessionPlatformMeta(sourceType) {
+      return {
+        label: '携程',
+        defaultUrl: 'https://hotels.ctrip.com/',
+        hint: '携程使用独立专用登录态。先登录再识别房型和查询价格会更稳定。',
+        startText: '登录携程并保存会话',
+      };
+    }
+
+    async function loadAppSessionStatus() {
+      const sourceType = currentSessionPlatform();
+      if (!sourceType) return;
+      try {
+        const data = await request(`/api/app-session-status?source_type=${encodeURIComponent(sourceType)}`);
+        const meta = sessionPlatformMeta(sourceType);
+        if (data.login_running) return setStatus('session-status', `${meta.label} 登录窗口已打开，登录完成后点“我已登录完成”`);
+        if (data.last_error) return setStatus('session-status', `登录窗口异常：${data.last_error}`, true);
+        setStatus('session-status', data.exists ? `已存在 ${meta.label} 专用登录态，可直接验证` : `还没有 ${meta.label} 专用登录态`);
+      } catch (_) {}
+    }
+
+    function updateLoginPanel() {
+      const sourceType = currentSessionPlatform();
+      const panel = document.getElementById('app-session-panel');
+      const title = document.getElementById('session-title');
+      const hint = document.getElementById('session-hint');
+      const startButton = document.getElementById('start-app-login');
+      panel.hidden = !sourceType;
+      if (!sourceType) return;
+      const meta = sessionPlatformMeta(sourceType);
+      title.textContent = `${meta.label} 登录`;
+      hint.textContent = meta.hint;
+      startButton.textContent = meta.startText;
+      loadAppSessionStatus();
+    }
+
+    function bindChartTooltips() {
+      document.querySelectorAll('.chart-wrap').forEach((wrap) => {
+        const tooltip = wrap.querySelector('.chart-tooltip');
+        if (!tooltip) return;
+        wrap.querySelectorAll('.spark-hotspot').forEach((point) => {
+          point.addEventListener('mouseenter', () => {
+            tooltip.textContent = `${point.dataset.time} · ¥${point.dataset.price}`;
+            tooltip.hidden = false;
+          });
+          point.addEventListener('mouseleave', () => {
+            tooltip.hidden = true;
+          });
+        });
+      });
+    }
+
+    function updateWatcherCountdowns() {
+      document.querySelectorAll('[data-next-check-at]').forEach((element) => {
+        const value = element.getAttribute('data-next-check-at');
+        element.textContent = fmtCountdown(value);
+      });
+    }
+
+
+    function renderWatcherSkeletons(count = 3) {
+      const root = document.getElementById('watcher-list');
+      root.innerHTML = Array.from({ length: count }).map(() => `
+        <article class="watcher watcher-skeleton" aria-hidden="true">
+          <div class="skeleton-line skeleton-title"></div>
+          <div class="skeleton-line skeleton-text"></div>
+          <div class="skeleton-line skeleton-text short"></div>
+          <div class="skeleton-tags">
+            <span class="skeleton-pill"></span>
+            <span class="skeleton-pill"></span>
+            <span class="skeleton-pill short"></span>
+          </div>
+          <div class="skeleton-chart"></div>
+          <div class="skeleton-actions">
+            <span class="skeleton-btn"></span>
+            <span class="skeleton-btn"></span>
+            <span class="skeleton-btn"></span>
+          </div>
+        </article>
+      `).join('');
+    }
+
+    function renderWatchers() {
+      const root = document.getElementById('watcher-list');
+      root.innerHTML = '';
+      if (!currentWatchers.length) {
+        root.innerHTML = '<div class="empty">还没有监控任务，先添加一个吧。</div>';
+        return;
+      }
+      currentWatchers.forEach((item) => {
+        const roomLine = item.room_type_keyword ? `<p>房型：${item.room_type_keyword}</p>` : '';
+        const tagsLine = item.room_type_keyword ? `<div class="inline-tag-list">${renderTags(item.room_type_tags || [])}</div>` : '';
+        const chart = renderSparkline(item.history || []);
+        const lowestInfo = (item.all_time_low_price !== null && item.all_time_low_price !== undefined)
+          ? { price: Number(item.all_time_low_price), checked_at: item.all_time_low_at }
+          : historicalLowInfo(item.history || []);
+        const div = document.createElement('div');
+        div.className = 'watcher';
+        div.innerHTML = `
+          <div class="watcher-main">
+            <h3>${item.name}</h3>
+            <p>${item.hotel_name} · ${item.source_label}</p>
+            ${roomLine}
+            ${tagsLine}
+            <p>当前价：${fmtPrice(item.currency, item.last_price)}</p>
+            ${item.last_price_note ? `<p class="hint">${item.last_price_note}</p>` : ''}
+            <p>目标价：${item.threshold_price ? fmtPrice(item.currency, item.threshold_price) : '未设置'}</p>
+            <p>最低合理价格：${item.min_expected_price ? fmtPrice(item.currency, item.min_expected_price) : '未设置'}</p>
+            <p>轮询间隔：${item.poll_interval_minutes || 5} 分钟（实际会有少量错峰抖动）</p>
+            <p>上次检查：${fmtDateTimeUtc8(item.last_checked_at)}</p>
+            <p>预计下次检查：${fmtDateTimeUtc8(item.next_check_at)} <span class="countdown-text" data-next-check-at="${item.next_check_at || ''}">${fmtCountdown(item.next_check_at)}</span></p>
+            <p>状态：${item.last_error ? `异常 - ${item.last_error}` : '正常'}</p>
+            <div class="watcher-toolbar">
+              <button data-id="${item.id}" data-action="edit" class="secondary">编辑</button>
+              <button data-id="${item.id}" data-action="open" class="secondary">打开链接</button>
+              <button data-id="${item.id}" data-action="copy-link" class="secondary">复制链接</button>
+              <button data-id="${item.id}" data-action="check"${watcherActionAttrs(item.id, 'check')}>${watcherActionText(item.id, 'check', '立即检查')}</button>
+              <button data-id="${item.id}" data-action="toggle"${watcherActionAttrs(item.id, 'toggle', 'secondary')}>${watcherActionText(item.id, 'toggle', item.is_active ? '暂停' : '启用')}</button>
+              <button data-id="${item.id}" data-action="delete"${watcherActionAttrs(item.id, 'delete', 'danger')}>${watcherActionText(item.id, 'delete', '删除')}</button>
+            </div>
+            <div class="trend-block">
+              <div class="trend-head">
+                <div class="trend-title">最近价格趋势</div>
+                <div class="trend-low">
+                  监控以来最低价：<strong>${lowestInfo ? fmtPrice(item.currency, lowestInfo.price) : '暂无数据'}</strong>
+                  <span>${lowestInfo ? `出现于 ${fmtDateTimeUtc8(lowestInfo.checked_at)}` : ''}</span>
+                </div>
+              </div>
+              ${chart}
+            </div>
+          </div>`;
+        root.appendChild(div);
+      });
+      updateWatcherCountdowns();
+      bindChartTooltips();
+    }
+
+    async function loadWatchers(options = {}) {
+      const { silent = false } = options;
+      if (!silent) {
+        renderWatcherSkeletons(currentWatchers.length || 3);
+        document.getElementById('meta').textContent = '正在加载监控列表...';
+      }
+      const data = await request('/api/watchers');
+      currentWatchers = data.items || [];
+      document.getElementById('meta').textContent = `每条监控可单独设置分钟级轮询间隔，实际执行会自动加入少量错峰抖动。`;
+      const buildInfo = document.getElementById('build-info');
+      if (buildInfo && data.build_version) buildInfo.textContent = `页面版本：${data.build_version}`;
+      renderWatchers();
+    }
+
+    document.getElementById('copy-debug').addEventListener('click', async () => {
+      if (!latestDebugText) return showToast('当前没有可复制的诊断信息', true);
+      try { await navigator.clipboard.writeText(latestDebugText); showToast('诊断信息已复制'); }
+      catch (_) { showToast('复制失败，请手动复制', true); }
+    });
+
+    document.getElementById('hide-debug').addEventListener('click', clearDebug);
+    document.getElementById('source_type').addEventListener('change', () => { updatePresetHint(); updateLoginPanel(); });
+
+    document.getElementById('test-notify').addEventListener('click', async (event) => {
+      const restore = setButtonLoading(event.currentTarget, '发送中...');
+      const webhook = document.getElementById('notify_target').value.trim();
+      const notifyType = document.getElementById('notify_type').value;
+      setStatus('form-status', '正在发送测试通知...');
+      clearDebug();
+      try {
+        await request('/api/test-notify', { method: 'POST', body: JSON.stringify({ notify_target: webhook, notify_type: notifyType }) });
+        setStatus('form-status', '测试通知已发送，请去对应 IM 确认');
+        showToast('测试通知已发送，请去对应 IM 确认');
+      } catch (error) {
+        setStatus('form-status', error.message, true);
+        renderDebug(error, { action: 'test_notify', webhook, notify_type: notifyType });
+        showToast('测试通知失败，详细诊断已展开', true);
+      } finally { restore(); }
+    });
+
+    document.getElementById('watcher-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const restore = setButtonLoading(document.getElementById('submit-btn'), '保存中...');
+      const form = new FormData(event.target);
+      const payload = Object.fromEntries(form.entries());
+      payload.use_app_session_profile = true;
+      if (payload.request_headers && payload.request_headers.trim()) {
+        try { JSON.parse(payload.request_headers); } catch (_) {
+          restore();
+          setStatus('form-status', '请求头 JSON 格式不正确', true);
+          return showToast('自定义请求头 JSON 格式不正确', true);
+        }
+      }
+      clearDebug();
+      try {
+        const isEdit = Boolean(payload.edit_id);
+        const url = isEdit ? '/api/update-watcher' : '/api/watchers';
+        if (isEdit) payload.id = Number(payload.edit_id);
+        await request(url, { method: 'POST', body: JSON.stringify(payload) });
+        await loadWatchers();
+        resetFormMode();
+        setStatus('form-status', isEdit ? '监控已更新' : '监控已创建，表单内容已保留');
+        showToast(isEdit ? '监控已更新' : '监控已创建，表单内容已保留');
+      } catch (error) {
+        setStatus('form-status', error.message, true);
+        renderDebug(error, { action: 'create_watcher', payload });
+        showToast('创建监控失败，详细诊断已展开', true);
+      } finally { restore(); }
+    });
+
+    document.getElementById('refresh-btn').addEventListener('click', async (event) => {
+      const restore = setButtonLoading(event.currentTarget, '刷新中...');
+      try {
+        await loadWatchers();
+        setStatus('list-status', '列表已刷新');
+        showToast('列表已刷新');
+      } catch (error) {
+        setStatus('list-status', error.message, true);
+        renderDebug(error, { action: 'refresh_watchers' });
+        showToast('刷新失败，详细诊断已展开', true);
+      } finally { restore(); }
+    });
+
+    document.getElementById('watcher-list').addEventListener('click', async (event) => {
+      const button = event.target.closest('button');
+      if (!button) return;
+      const id = Number(button.dataset.id);
+      const action = button.dataset.action;
+      const item = currentWatchers.find((entry) => Number(entry.id) === id);
+      if (action === 'delete') {
+        if (!window.confirm('确定要删除这个监控吗？删除后历史价格也会一起移除。')) return;
+      }
+      if (action === 'edit') {
+        if (item) fillFormForEdit(item);
+        setStatus('list-status', '已载入编辑表单');
+        return showToast('已载入编辑表单');
+      }
+      if (action === 'open') {
+        if (item?.target_url) window.open(item.target_url, '_blank');
+        setStatus('list-status', '已打开酒店链接');
+        return showToast('已打开酒店链接');
+      }
+      if (action === 'copy-link') {
+        try { await navigator.clipboard.writeText(item?.target_url || ''); showToast('已复制酒店链接'); setStatus('list-status', '已复制酒店链接'); }
+        catch (_) { showToast('复制链接失败', true); setStatus('list-status', '复制链接失败', true); }
+        return;
+      }
+      const loadingText = action === 'check' ? '检查中...' : action === 'delete' ? '删除中...' : '处理中...';
+      const restore = setButtonLoading(button, loadingText);
+      if (action === 'check' || action === 'toggle' || action === 'delete') markWatcherActionPending(id, action, loadingText);
+      clearDebug();
+      try {
+        if (action === 'check') {
+          setStatus('list-status', '正在检查价格，请等待结果返回...');
+          const result = await request('/api/check-now', { method: 'POST', body: JSON.stringify({ id }) });
+          const note = result.price_note ? `（${result.price_note}）` : '';
+          const text = result.notified ? `已提醒，最新价格 ${result.price}${note}` : `检查完成，最新价格 ${result.price}${note}`;
+          setStatus('list-status', text); showToast(text);
+        }
+        if (action === 'toggle') {
+          await request('/api/toggle', { method: 'POST', body: JSON.stringify({ id, is_active: button.textContent === '启用' || button.dataset.originalText === '启用' }) });
+          setStatus('list-status', '状态已更新'); showToast('状态已更新');
+        }
+        if (action === 'delete') {
+          await request('/api/delete', { method: 'POST', body: JSON.stringify({ id }) });
+          setStatus('list-status', '监控已删除'); showToast('监控已删除');
+        }
+        await loadWatchers();
+      } catch (error) {
+        setStatus('list-status', error.message, true);
+        renderDebug(error, { action, id });
+        showToast('操作失败，详细诊断已展开', true);
+      } finally {
+        if (action === 'check' || action === 'toggle' || action === 'delete') clearWatcherActionPending(id, action);
+        restore();
+      }
+    });
+
+    document.getElementById('start-app-login').addEventListener('click', async (event) => {
+      const restore = setButtonLoading(event.currentTarget, '打开中...');
+      const source_type = currentSessionPlatform() || 'ctrip';
+      const target_url = document.getElementById('target_url').value.trim() || sessionPlatformMeta(source_type).defaultUrl;
+      clearDebug();
+      try {
+        const data = await request('/api/start-ctrip-login', { method: 'POST', body: JSON.stringify({ source_type, target_url }) });
+        setStatus('session-status', data.message || '登录窗口已打开');
+        showToast(data.message || '登录窗口已打开');
+      } catch (error) {
+        setStatus('session-status', error.message, true);
+        renderDebug(error, { action: 'start_app_login', source_type, target_url });
+        showToast('打开登录窗口失败，详细诊断已展开', true);
+      } finally { restore(); loadAppSessionStatus(); }
+    });
+
+    document.getElementById('finish-app-login').addEventListener('click', async (event) => {
+      const restore = setButtonLoading(event.currentTarget, '保存中...');
+      clearDebug();
+      try {
+        const source_type = currentSessionPlatform() || 'ctrip';
+        const data = await request('/api/finish-ctrip-login', { method: 'POST', body: JSON.stringify({ source_type }) });
+        setStatus('session-status', data.message || '专用登录态已保存');
+        showToast(data.message || '专用登录态已保存');
+      } catch (error) {
+        setStatus('session-status', error.message, true);
+        renderDebug(error, { action: 'finish_app_login', source_type: currentSessionPlatform() || 'ctrip' });
+        showToast('保存登录态失败，详细诊断已展开', true);
+      } finally { restore(); loadAppSessionStatus(); }
+    });
+
+    document.getElementById('verify-app-session').addEventListener('click', async (event) => {
+      const restore = setButtonLoading(event.currentTarget, '验证中...');
+      const source_type = document.getElementById('source_type').value;
+      const target_url = document.getElementById('target_url').value.trim();
+      const request_headers = document.getElementById('request_headers').value.trim();
+      if (!target_url) {
+        restore(); setStatus('session-status', '请先填写酒店链接', true); return showToast('请先填写酒店链接', true);
+      }
+      clearDebug();
+      try {
+        const data = await request('/api/verify-app-session', { method: 'POST', body: JSON.stringify({ source_type, target_url, request_headers, cookie: '' }) });
+        setStatus('session-status', data.message || '专用登录态可用');
+        showToast(data.message || '专用登录态可用');
+      } catch (error) {
+        setStatus('session-status', error.message, true);
+        renderDebug(error, { action: 'verify_app_session', source_type, target_url });
+        showToast('登录态验证失败，详细诊断已展开', true);
+      } finally {
+        restore();
+      }
+    });
+
+    document.getElementById('cancel-edit-btn').addEventListener('click', () => {
+      document.getElementById('watcher-form').reset();
+      document.getElementById('room_type_meta').value = '';
+      document.querySelector('input[name="poll_interval_minutes"]').value = 5;
+      resetFormMode();
+      updatePresetHint();
+      updateLoginPanel();
+    });
+
+    setSectionBooting('settings', true);
+    setSectionBooting('watchers', true);
+    renderWatcherSkeletons(3);
+
+    Promise.allSettled([loadPresets(), loadAppSessionStatus()]).then((results) => {
+      const failed = results.find((item) => item.status === 'rejected');
+      if (!document.querySelector('input[name="poll_interval_minutes"]').value) document.querySelector('input[name="poll_interval_minutes"]').value = 5;
+      updateLoginPanel();
+      setSectionBooting('settings', false);
+      if (failed && failed.reason) {
+        setStatus('form-status', failed.reason.message || '设置区初始化失败', true);
+      }
+    });
+
+    loadWatchers({ silent: true }).catch((error) => {
+      setStatus('list-status', error.message, true);
+      renderDebug(error, { action: 'initial_watchers_load' });
+      showToast('监控列表初始化失败，详细诊断已展开', true);
+    }).finally(() => {
+      setSectionBooting('watchers', false);
+    });
+
+    window.setInterval(() => { updateWatcherCountdowns(); }, 1000);
+    window.setInterval(() => { if (!pendingWatcherActions.size) loadWatchers({ silent: true }).catch(() => {}); }, 30000);
+  </script>
+</body>
+</html>
