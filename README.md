@@ -5,7 +5,7 @@
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
 [![Platform](https://img.shields.io/badge/platform-macOS-lightgrey)](https://www.apple.com/macos/)
 
-Local hotel price monitoring for `Ctrip` with browser-based fetching and IM webhook notifications.
+Local hotel price monitoring for `Ctrip` with browser-assisted page access and IM webhook notifications.
 
 ## Features
 - Monitor a hotel or a specific room type by keyword
@@ -119,7 +119,7 @@ Optional but commonly useful:
   - non-target drop sends a normal card
 
 ### Login / session flow
-Ctrip fetching usually depends on login state.
+Access to Ctrip pages may depend on your own login state.
 
 Recommended flow:
 1. open the app page
@@ -158,7 +158,7 @@ Most commonly because the notification condition was not met yet:
 - current price is not lower than the last notified price
 
 ### Why is login required?
-Ctrip may show different content depending on session, device, region, or risk control state.
+Ctrip may show different content depending on session, device, region, or other access conditions.
 
 ### Why does the trend chart not show all history?
 The chart is intentionally limited for UI readability, but the underlying price history is now kept in full.
@@ -244,6 +244,19 @@ tests/
 - current repository only targets `Ctrip`
 - notification layer is already abstracted enough for more IM integrations later
 - browser/session logic remains the most environment-sensitive part
+
+## Legal / Responsible Use
+
+This project is intended for personal, local use only.
+
+Please keep these boundaries in mind:
+- use it only with websites and accounts you are authorized to access
+- review and follow the target website’s terms, policies, and applicable laws before using automation
+- keep request frequency low and avoid behavior that may burden, interfere with, or bypass a website’s normal controls
+- do not use this project to resell data, build a commercial data service, or run large-scale collection jobs
+- do not commit personal session data, cookies, logs, screenshots, or webhook secrets into Git
+
+This repository does not provide anti-bot bypass tooling, CAPTCHA solving, proxy rotation, or bulk collection features, and it should not be used for those purposes.
 
 ## Disclaimer
 Use this project responsibly and only in ways that comply with the target website’s terms and your local laws.
