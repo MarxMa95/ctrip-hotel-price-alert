@@ -32,7 +32,7 @@ def check_watcher(watcher: Watcher) -> Dict[str, Any]:
         update_check_result(watcher.id, watcher.last_price, False, str(exc), getattr(watcher, '_runtime_price_note', None))
         payload = {'ok': False, 'error': str(exc)}
         if 'Invalid header value' in str(exc):
-            payload['error'] = '请求头里有非法内容，通常是 Cookie 里带了换行或特殊字符。请重新粘贴一整串 Cookie。'
+            payload['error'] = 'The request headers contain invalid content. This usually means the Cookie value includes line breaks or special characters. Please paste the full Cookie string again.'
         debug_payload = getattr(exc, 'debug_payload', None)
         if debug_payload:
             payload['debug'] = debug_payload

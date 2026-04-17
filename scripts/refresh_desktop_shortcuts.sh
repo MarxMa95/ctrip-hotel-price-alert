@@ -18,10 +18,10 @@ SCRIPT
   chmod +x "$DESKTOP_DIR/$shortcut_name"
 }
 
-make_shortcut '携程酒店提醒-启动.command' '携程酒店提醒-启动.command'
-make_shortcut '核心回归检查.command' '核心回归检查.command'
-make_shortcut '环境自检.command' '环境自检.command'
-make_shortcut '上传前自检.command' '上传前自检.command'
+make_shortcut 'Start-Ctrip-Hotel-Alert.command' 'Start-Ctrip-Hotel-Alert.command'
+make_shortcut 'Run-Core-Checks.command' 'Run-Core-Checks.command'
+make_shortcut 'Environment-Check.command' 'Environment-Check.command'
+make_shortcut 'Prepublish-Check.command' 'Prepublish-Check.command'
 
-echo '桌面快捷入口已刷新：'
-ls -1 "$DESKTOP_DIR" | grep -E '携程酒店提醒-启动|核心回归检查|环境自检|上传前自检' || true
+echo 'Desktop shortcuts refreshed:'
+ls -1 "$DESKTOP_DIR" | grep -E 'Start-Ctrip-Hotel-Alert|Run-Core-Checks|Environment-Check|Prepublish-Check' || true

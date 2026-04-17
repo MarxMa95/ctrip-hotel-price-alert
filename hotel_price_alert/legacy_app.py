@@ -108,11 +108,11 @@ DEFAULT_PATTERNS = {
 }
 
 SOURCE_LABELS = {
-    'ctrip': '携程',
+    'ctrip': 'Ctrip',
 }
 
 SOURCE_TIPS = {
-    'ctrip': '建议直接从携程 App 或网页复制“已选好入住日期和房型”的酒店详情链接。',
+    'ctrip': 'Copy a hotel detail URL from Ctrip after you have selected your dates and room type.',
 }
 
 INDEX_HTML = TEMPLATE_PATH.read_text(encoding='utf-8') if TEMPLATE_PATH.exists() else ''
@@ -153,7 +153,7 @@ def resolve_chromium_executable(playwright: Any = None, prefer_system: bool = Fa
     candidates = _iter_browser_candidates(prefer_system=prefer_system)
     if candidates:
         return str(candidates[0])
-    raise FileNotFoundError(f'未找到可用的 Chromium 或系统 Chrome，可执行目录：{PLAYWRIGHT_CACHE_DIR}')
+    raise FileNotFoundError(f'No usable Chromium or system Chrome executable was found. Checked under: {PLAYWRIGHT_CACHE_DIR}')
 
 
 def cleanup_persistent_profile_locks(profile_dir: Path) -> None:
@@ -870,9 +870,9 @@ def prepare_local_chrome_profile(profile_name: str) -> tuple[Path, str]:
     source_root = DEFAULT_CHROME_USER_DATA_DIR
     source_profile = source_root / profile_name
     if not source_root.exists():
-        raise FileNotFoundError(f'未找到本机 Chrome 用户目录：{source_root}')
+        raise FileNotFoundError(f'Local Chrome user data directory was not found: {source_root}')
     if not source_profile.exists():
-        raise FileNotFoundError(f'未找到本机 Chrome Profile：{source_profile}')
+        raise FileNotFoundError(f'Local Chrome profile was not found: {source_profile}')
 
     temp_root = Path(tempfile.mkdtemp(prefix='hotel-alert-chrome-'))
     local_state = source_root / 'Local State'
@@ -901,7 +901,7 @@ def prepare_app_session_profile_copy(source_type: str) -> tuple[Path, Path]:
 
 
 def session_login_label(source_type: str) -> str:
-    return '携程'
+    return 'Ctrip'
 
 
 def session_default_target_url(source_type: str) -> str:
@@ -912,7 +912,7 @@ def resolve_login_browser_executable() -> str:
     for candidate in SYSTEM_BROWSER_CANDIDATES:
         if candidate.exists():
             return str(candidate)
-    raise FileNotFoundError('没有找到可用于登录的系统浏览器。请先安装 Google Chrome，再重试登录。')
+    raise FileNotFoundError('No supported system browser was found for sign-in. Please install Google Chrome and try again.')
 
 
 def ensure_app_session_profile_dir(source_type: str) -> Path:
@@ -960,20 +960,20 @@ def save_app_session_cookie_snapshot(source_type: str, cookies: List[Dict[str, A
 def export_app_session_cookies_via_cdp(source_type: str) -> Dict[str, Any]:
     debug_port = int(APP_SESSION_DEBUG_PORTS.get(source_type) or 0)
     if debug_port <= 0 or not can_connect_app_session_debug_port(source_type):
-        return {'ok': False, 'cookie_count': 0, 'message': '未检测到可连接的专用浏览器调试端口'}
+        return {'ok': False, 'cookie_count': 0, 'message': 'No reachable debug port was detected for the dedicated browser'}
     playwright = sync_playwright().start()
     try:
         browser = playwright.chromium.connect_over_cdp(f'http://127.0.0.1:{debug_port}')
         contexts = browser.contexts
         if not contexts:
-            return {'ok': False, 'cookie_count': 0, 'message': '已连接专用浏览器，但没有可用上下文'}
+            return {'ok': False, 'cookie_count': 0, 'message': 'Connected to the dedicated browser, but no usable context was found'}
         cookies = contexts[0].cookies()
         cookie_count = save_app_session_cookie_snapshot(source_type, cookies)
         return {
             'ok': cookie_count > 0,
             'cookie_count': cookie_count,
             'path': str(app_session_cookie_snapshot_path(source_type)),
-            'message': f'已导出 {cookie_count} 条 Cookie 快照' if cookie_count > 0 else '未导出到有效 Cookie 快照',
+            'message': f'Exported {cookie_count} cookies into the session snapshot' if cookie_count > 0 else 'No valid cookie snapshot was exported',
         }
     finally:
         playwright.stop()
@@ -1079,7 +1079,7 @@ def launch_login_and_save_session(source_type: str, target_url: str) -> Dict[str
             return {
                 'ok': True,
                 'already_running': True,
-                'message': f'{label} 登录窗口已经打开了。请在浏览器里完成登录，然后点击“我已登录完成”。',
+                'message': f'{label} sign-in window is already open. Finish signing in in the browser, then click “I have finished signing in”.',
                 'profile_dir': str(profile_dir),
             }
         stop_event = threading.Event()
@@ -1097,10 +1097,10 @@ def launch_login_and_save_session(source_type: str, target_url: str) -> Dict[str
             break
 
     state = app_session_profile_status(source_type)
-    reset_hint = f" 已自动备份旧资料夹到：{state.get('reset_backup_dir')}" if state.get('reset_backup_dir') else ''
+    reset_hint = f" Backed up the previous profile directory to: {state.get('reset_backup_dir')}" if state.get('reset_backup_dir') else ''
     return {
         'ok': True,
-        'message': f'已打开 {label} 登录窗口。请在弹出的浏览器里完成登录，完成后回到这里点击“我已登录完成”。{reset_hint}',
+        'message': f'Opened the {label} sign-in window. Finish signing in in the browser, then return here and click “I have finished signing in”.{reset_hint}',
         'profile_dir': str(profile_dir),
         'status': state,
     }
@@ -1121,15 +1121,15 @@ def finish_login_and_save_session(source_type: str) -> Dict[str, Any]:
     snapshot_result = {'ok': False, 'cookie_count': 0, 'message': ''}
     if saved_ok and source_type == 'ctrip':
         snapshot_result = export_app_session_cookies_via_cdp(source_type)
-    snapshot_hint = f" 已同步后台快照 {snapshot_result.get('cookie_count', 0)} 条。" if snapshot_result.get('ok') else ''
+    snapshot_hint = f" Synced backend snapshot with {snapshot_result.get('cookie_count', 0)} entries. " if snapshot_result.get('ok') else ''
     success_message = (
-        f'{label} 登录态已保存。后续验证和检查会优先走后台 Cookie 快照，不再依赖前台专用窗口。'
-        f'{snapshot_hint}现在可以直接关闭携程专用窗口；之后“验证登录态”“立即检查”和自动监控都会走后台。'
-        '如果后面提示登录态失效，再重新打开专用窗口登录一次，并点“我已登录完成”即可。'
+        f'{label} session has been saved. Verification and checks will now prefer the backend cookie snapshot instead of the foreground sign-in window.'
+        f'{snapshot_hint}You can close the dedicated Ctrip window now. Future verification, manual checks, and automatic monitoring will run in the background.'
+        'If the session expires later, open the dedicated sign-in window again, sign in once more, and click “I have finished signing in”.'
     )
     return {
         'ok': saved_ok,
-        'message': (success_message if saved_ok else '我还没有在携程专用资料夹里检测到有效登录 Cookie。请确认你已经在弹出的浏览器里真正登录成功，然后再点一次“我已登录完成”。'),
+        'message': (success_message if saved_ok else 'No valid sign-in cookie was found in the dedicated Ctrip profile yet. Please confirm that sign-in was completed successfully in the browser, then click “I have finished signing in” again.'),
         'profile_dir': str(ensure_app_session_profile_dir(source_type)),
         'status': state,
         'snapshot': snapshot_result,
@@ -1198,14 +1198,14 @@ def startup_session_check(source_type: str = 'ctrip') -> Dict[str, Any]:
         return {
             'ok': False,
             'needs_login': True,
-            'message': f'{session_login_label(source_type)} 专用登录窗口还开着，请先完成登录后再继续。',
+            'message': f'{session_login_label(source_type)} dedicated sign-in window is still open. Please finish signing in before continuing.',
             'status': status,
         }
     if not status.get('exists'):
         return {
             'ok': False,
             'needs_login': True,
-            'message': f'还没有{session_login_label(source_type)}专用登录态，请先在页面里登录并保存会话。',
+            'message': f'No {session_login_label(source_type)} dedicated session has been saved yet. Please sign in and save a session from the page first.',
             'status': status,
             'target_url': recent_target_url(source_type),
         }
@@ -1213,7 +1213,7 @@ def startup_session_check(source_type: str = 'ctrip') -> Dict[str, Any]:
         return {
             'ok': False,
             'needs_login': True,
-            'message': '携程专用登录态里还没有有效登录 Cookie，请重新点“登录携程并保存会话”完成登录。',
+            'message': 'The dedicated Ctrip session does not contain a valid sign-in cookie yet. Click “Sign in to Ctrip and save session” and complete sign-in again.',
             'status': status,
             'target_url': recent_target_url(source_type),
         }
@@ -1225,7 +1225,7 @@ def startup_session_check(source_type: str = 'ctrip') -> Dict[str, Any]:
         return {
             'ok': bool(result.get('ok')),
             'needs_login': not bool(result.get('ok')),
-            'message': f'{session_login_label(source_type)}专用登录态验证通过' if result.get('ok') else f'{session_login_label(source_type)}专用登录态已失效，请重新登录。',
+            'message': f'{session_login_label(source_type)} dedicated session verification passed' if result.get('ok') else f'{session_login_label(source_type)} dedicated session has expired. Please sign in again.',
             'target_url': target_url,
             'page_debug': result.get('page_debug'),
             'status': status,
@@ -1234,7 +1234,7 @@ def startup_session_check(source_type: str = 'ctrip') -> Dict[str, Any]:
         payload = {
             'ok': False,
             'needs_login': True,
-            'message': f'{session_login_label(source_type)}专用登录态验证失败：{exc}',
+            'message': f'{session_login_label(source_type)} dedicated session verification failed: {exc}',
             'target_url': target_url,
             'status': status,
         }
@@ -1249,7 +1249,7 @@ def startup_all_session_checks() -> Dict[str, Any]:
     return {
         'ok': bool(result.get('ok')),
         'items': {'ctrip': result},
-        'message': '携程：可用' if result.get('ok') else '携程：需要重新登录或重新验证',
+        'message': 'Ctrip: ready' if result.get('ok') else 'Ctrip: sign-in or re-verification required',
         'source_type': 'ctrip',
     }
 
@@ -1267,7 +1267,7 @@ def verify_app_session(target_url: str, headers: Dict[str, str], source_type: st
     label = session_login_label(source_type)
     return {
         'ok': ok,
-        'message': '专用登录态可用' if ok else f'专用登录态仍然落到了{label}登录页，请重新登录后再试',
+        'message': 'Dedicated session is ready' if ok else f'The dedicated session still lands on the {label} sign-in page. Please sign in again and retry',
         'page_debug': page_debug,
     }
 
@@ -1276,7 +1276,7 @@ def _open_app_session_page(url: str, headers: Dict[str, str], source_type: str, 
     with APP_SESSION_LOGIN_LOCK:
         thread = APP_SESSION_LOGIN_THREADS.get(source_type)
         if thread and thread.is_alive():
-            raise RuntimeError(f'{session_login_label(source_type)}登录窗口还开着。请先点击“我已登录完成”，保存登录态后再识别房型。')
+            raise RuntimeError(f'{session_login_label(source_type)}sign-in window is still open. Click “I have finished signing in” first so the session can be saved before continuing.')
     playwright = sync_playwright().start()
     browser = None
     context = None
@@ -1286,7 +1286,7 @@ def _open_app_session_page(url: str, headers: Dict[str, str], source_type: str, 
             export_app_session_cookies_via_cdp(source_type)
             cookies = load_app_session_cookie_snapshot(source_type)
         if not cookies:
-            raise RuntimeError(f'{session_login_label(source_type)} 后台 Cookie 快照不可用，请先点“登录携程并保存会话”，登录完成后再点一次“我已登录完成”。')
+            raise RuntimeError(f'{session_login_label(source_type)} backend cookie snapshot is unavailable. Please click “Sign in to Ctrip and save session”, finish signing in, and then click “I have finished signing in” again.')
         executable_path = resolve_chromium_executable(playwright, prefer_system=False)
         browser = playwright.chromium.launch(
             executable_path=executable_path,
@@ -1687,7 +1687,7 @@ def extract_price(text: str, patterns: List[str]) -> float:
     fallback = plausible_price_from_text(text)
     if fallback is not None:
         return fallback
-    raise ValueError('没抓到价格。通常是页面需要登录/Cookie，或平台页面结构变了。')
+    raise ValueError('No price was found. Usually this means the page requires sign-in/cookies, or the site structure has changed.')
 
 
 def matched_room_blocks(text: str, watcher: Watcher) -> List[Dict[str, Any]]:
@@ -1809,31 +1809,31 @@ def room_scoped_texts(text: str, room_keyword: str, watcher: Optional[Watcher] =
     final_url = str(page_debug.get('final_url') or '')
     signals = page_debug.get('signals') or {}
     if signals.get('login_like') or ('passport.ctrip.com' in final_url and (watcher is None or watcher.source_type == 'ctrip')):
-        source_label = '携程'
+        source_label = 'Ctrip'
         error = ValueError(
-            f'当前抓到的并不是酒店房型页，而是{source_label}登录页：{final_url or "(未知链接)"}。'
-            f'请先点“登录{source_label}并保存会话”，在弹出的浏览器里完成登录，再回来点“我已登录完成”，然后重新识别房型。'
+            f'The current page is not a hotel room page. It looks like the {source_label} sign-in page instead: {final_url or "(unknown URL)"}.'
+            f'Click “Sign in to {source_label} and save session”, finish signing in in the browser, return here, click “I have finished signing in”, and try again.'
         )
         setattr(error, 'debug_payload', build_room_debug_payload(text, keyword, watcher))
         raise error
     if watcher is not None and watcher.source_type == 'ctrip' and signals.get('booking_like'):
         error = ValueError(
-            f'当前跳转到了携程下单页，不是房型页：{final_url or "(未知链接)"}。'
-            '我已经避免再误点到下单页；请重新点一次“立即检查”。如果仍出现这个错误，把这段诊断信息发我。'
+            f'The current page redirected to a Ctrip checkout page instead of a room page: {final_url or "(unknown URL)"}.'
+            'The workflow already tried to avoid entering checkout again. Please click “Check now” once more. If the error persists, share the diagnostics.'
         )
         setattr(error, 'debug_payload', build_room_debug_payload(text, keyword, watcher))
         raise error
     if suggestions:
         error = ValueError(
-            f"没有找到房型关键词：{keyword}。已尝试匹配这些关键词片段：{variant_text}。"
-            f"当前页面抓到的房型候选示例：{'；'.join(suggestions)}。"
-            "建议：1）直接填写更完整的房型关键词再试；2）如果页面明明有但仍匹配不到，说明该房型可能还未完全加载出来。"
+            f"The room keyword was not found: {keyword}. Tried these keyword variants: {variant_text}."
+            f"Sample room candidates found on the current page: {';'.join(suggestions)}."
+            "Suggestion: 1) try a more complete room keyword; 2) if the room is visible but still not matching, it may not have fully loaded yet."
         )
         setattr(error, 'debug_payload', build_room_debug_payload(text, keyword, watcher))
         raise error
     error = ValueError(
-        f"没有找到房型关键词：{keyword}。已尝试匹配这些关键词片段：{variant_text}。"
-        "当前页面没有抓到任何明确的房型候选，建议先滚动页面、补 Cookie，或换成更具体的房型完整名称。"
+        f"The room keyword was not found: {keyword}. Tried these keyword variants: {variant_text}."
+        "No clear room candidates were found on the current page. Try scrolling the page, refreshing cookies, or using a more specific full room name."
     )
     setattr(error, 'debug_payload', build_room_debug_payload(text, keyword, watcher))
     raise error
@@ -1998,7 +1998,7 @@ def extract_price_for_watcher(text: str, watcher: Watcher) -> float:
             value = extract_price(snippet, patterns)
             if min_expected and value < min_expected:
                 filtered_out_prices.append(value)
-                raise ValueError(f'抓到的价格 {value:.2f} 低于你设置的最低合理价格 {min_expected:.2f}')
+                raise ValueError(f'The detected price {value:.2f} is lower than your configured minimum reasonable price {min_expected:.2f}')
             return value
         except Exception as exc:
             last_error = exc
@@ -2006,18 +2006,18 @@ def extract_price_for_watcher(text: str, watcher: Watcher) -> float:
         if filtered_out_prices:
             samples = ' / '.join(f'{value:.2f}' for value in filtered_out_prices[:6])
             error = ValueError(
-                f'找到了房型关键词，但当前抓到的价格都低于你设置的最低合理价格：{watcher.room_type_keyword}。'
-                f'最低合理价格为 {min_expected:.2f}，本次抓到的候选价格有：{samples}。'
-                '你可以把“最低合理价格”调低一点，或者继续优化房型匹配。'
+                f'The room keyword was matched, but all detected prices are below your configured minimum reasonable price: {watcher.room_type_keyword}.'
+                f'The minimum reasonable price is {min_expected:.2f}. Candidate prices detected this time: {samples}.'
+                'You can lower the minimum reasonable price a bit, or keep refining the room matching keyword.'
             )
             setattr(error, 'debug_payload', build_room_debug_payload(text, watcher.room_type_keyword, watcher))
             raise error from last_error
-        error = ValueError(f'找到了房型关键词，但没抓到对应价格：{watcher.room_type_keyword}')
+        error = ValueError(f'The room keyword was matched, but no corresponding price was found: {watcher.room_type_keyword}')
         setattr(error, 'debug_payload', build_room_debug_payload(text, watcher.room_type_keyword, watcher))
         raise error from last_error
     if last_error:
         raise last_error
-    raise ValueError('没抓到价格')
+    raise ValueError('No price was found')
 
 
 def should_notify(watcher: Watcher, current_price: float) -> bool:
@@ -2044,23 +2044,23 @@ def send_wechat_webhook(webhook_url: str, content: str) -> None:
 
 def send_notification(watcher: Watcher, current_price: float, is_test: bool = False) -> None:
     lines = [
-        '酒店价格提醒测试' if is_test else '酒店价格提醒',
-        '平台: 携程',
-        f'监控任务: {watcher.name}',
-        f'酒店: {watcher.hotel_name}',
+        'Hotel Price Alert Test' if is_test else 'Hotel Price Alert',
+        'Platform: Ctrip',
+        f'Watcher: {watcher.name}',
+        f'Hotel: {watcher.hotel_name}',
     ]
     if watcher.room_type_keyword.strip():
-        lines.append(f'房型: {watcher.room_type_keyword}')
+        lines.append(f'Room: {watcher.room_type_keyword}')
     if watcher.room_type_meta.strip():
-        lines.append(f'房型标签: {watcher.room_type_meta}')
-    lines.append(f'当前价格: {watcher.currency} {current_price:.2f}')
+        lines.append(f'Room notes: {watcher.room_type_meta}')
+    lines.append(f'Current price: {watcher.currency} {current_price:.2f}')
     if watcher.last_price is not None and not is_test:
-        lines.append(f'上次价格: {watcher.currency} {watcher.last_price:.2f}')
+        lines.append(f'Last price: {watcher.currency} {watcher.last_price:.2f}')
     if watcher.threshold_price is not None:
-        lines.append(f'目标价格: {watcher.currency} {watcher.threshold_price:.2f}')
+        lines.append(f'Target price: {watcher.currency} {watcher.threshold_price:.2f}')
     if watcher.min_expected_price is not None:
-        lines.append(f'最低合理价格: {watcher.currency} {watcher.min_expected_price:.2f}')
-    lines.append(f'链接: {watcher.target_url}')
+        lines.append(f'Minimum reasonable price: {watcher.currency} {watcher.min_expected_price:.2f}')
+    lines.append(f'URL: {watcher.target_url}')
     content = '\n'.join(lines)
     if watcher.notify_type == 'wechat':
         send_wechat_webhook(watcher.notify_target, content)

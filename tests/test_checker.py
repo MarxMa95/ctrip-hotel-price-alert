@@ -9,12 +9,12 @@ class CheckerTests(unittest.TestCase):
     def _watcher(self, **overrides):
         data = dict(
             id=1,
-            name='任务',
-            hotel_name='酒店',
+            name='Task',
+            hotel_name='Hotel',
             source_type='ctrip',
             target_url='https://example.com',
-            room_type_keyword='豪华大床房',
-            room_type_meta='含早',
+            room_type_keyword='Deluxe King Room',
+            room_type_meta='Breakfast included',
             price_pattern='',
             currency='CNY',
             notify_type='feishu',

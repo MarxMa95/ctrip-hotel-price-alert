@@ -13,7 +13,7 @@ def list_watcher_items() -> Dict[str, Any]:
     items = []
     for watcher in list_watchers():
         item = watcher.__dict__.copy()
-        item['source_label'] = '携程'
+        item['source_label'] = 'Ctrip'
         item['tip'] = SOURCE_TIPS.get('ctrip', '')
         item['room_type_tags'] = watcher.meta_tags()
         item['history'] = list_history(watcher.id, PRICE_HISTORY_LIMIT)
@@ -29,7 +29,7 @@ def list_watcher_items() -> Dict[str, Any]:
 
 
 def source_presets_payload() -> Dict[str, Any]:
-    return {'items': [{'key': 'ctrip', 'label': '携程', 'tip': SOURCE_TIPS.get('ctrip', ''), 'patterns': []}]}
+    return {'items': [{'key': 'ctrip', 'label': 'Ctrip', 'tip': SOURCE_TIPS.get('ctrip', ''), 'patterns': []}]}
 
 
 def normalize_watcher_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -67,7 +67,7 @@ def update_watcher_from_payload(payload: Dict[str, Any]) -> None:
 def run_check_now(watcher_id: int) -> Tuple[Dict[str, Any], int]:
     watcher = find_watcher(int(watcher_id))
     if not watcher:
-        return {'error': '监控不存在'}, HTTPStatus.NOT_FOUND
+        return {'error': 'Watcher not found'}, HTTPStatus.NOT_FOUND
     result = check_watcher(watcher)
     status = HTTPStatus.OK if result.get('ok') else HTTPStatus.BAD_REQUEST
     return result, status
@@ -76,12 +76,12 @@ def run_check_now(watcher_id: int) -> Tuple[Dict[str, Any], int]:
 def build_test_notification_watcher(webhook: str, notify_type: str = 'feishu') -> Watcher:
     return Watcher(
         id=0,
-        name='测试提醒',
-        hotel_name='测试酒店',
+        name='Test Alert',
+        hotel_name='Test Hotel',
         source_type='ctrip',
         target_url='https://example.com',
-        room_type_keyword='豪华大床房',
-        room_type_meta='含早 | 免费取消',
+        room_type_keyword='Deluxe King Room',
+        room_type_meta='Breakfast included | Free cancellation',
         price_pattern='',
         currency='CNY',
         notify_type=notify_type or 'feishu',

@@ -54,7 +54,7 @@ http://127.0.0.1:8766
 
 ### Or use the included launcher
 
-- `携程酒店提醒-启动.command`
+- `Start-Ctrip-Hotel-Alert.command`
 
 This launcher will:
 - stop the old local process if needed
@@ -69,9 +69,9 @@ If you use the provided desktop shortcuts, note the difference:
 - desktop `.command` files are lightweight wrappers that jump back into the project directory
 
 Recommended desktop entries:
-- `携程酒店提醒-启动.command`
-- `核心回归检查.command`
-- `环境自检.command`
+- `Start-Ctrip-Hotel-Alert.command`
+- `Run-Core-Checks.command`
+- `Environment-Check.command`
 
 ## Installation
 
@@ -123,10 +123,10 @@ Access to Ctrip pages may depend on your own login state.
 
 Recommended flow:
 1. open the app page
-2. click `登录并保存会话`
+2. click `Sign in and save session`
 3. finish login in the opened browser window
-4. click `我已登录完成`
-5. run `立即检查`
+4. click `I have finished signing in`
+5. run `Check now`
 
 ## Configuration
 

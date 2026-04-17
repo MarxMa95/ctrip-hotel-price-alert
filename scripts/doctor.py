@@ -32,29 +32,29 @@ def list_browsers() -> list[Path]:
 
 
 def main() -> int:
-    print('开始自检...')
+    print('Starting environment check...')
     print(f'Python: {sys.executable}')
-    print(f'Python 版本: {sys.version.split()[0]}')
+    print(f'Python version: {sys.version.split()[0]}')
 
     if not importlib.util.find_spec('playwright'):
-        print('❌ 缺少 playwright Python 包')
-        print('建议：运行 `python3 -m pip install playwright`')
+        print('❌ Missing the playwright Python package')
+        print('Recommendation: run `python3 -m pip install playwright`')
         return 1
-    print('✅ 已找到 playwright Python 包')
+    print('✅ Found the playwright Python package')
 
     if CACHE_DIR.exists():
-        print(f'✅ 缓存目录存在: {CACHE_DIR}')
+        print(f'✅ Browser cache directory exists: {CACHE_DIR}')
     else:
-        print(f'⚠️ 未找到 Playwright 浏览器缓存目录: {CACHE_DIR}')
-        print('将尝试使用系统已安装的浏览器')
+        print(f'⚠️ Playwright browser cache directory was not found: {CACHE_DIR}')
+        print('Will fall back to system-installed browsers')
 
     browsers = list_browsers()
     if not browsers:
-        print('❌ 未找到可用的 Chromium/Chrome/Edge 可执行文件')
-        print('建议：安装 Google Chrome，或运行 `python3 -m playwright install chromium`')
+        print('❌ No usable Chromium/Chrome/Edge executable was found')
+        print('Recommendation: install Google Chrome or run `python3 -m playwright install chromium`')
         return 1
 
-    print('✅ 找到这些可尝试的浏览器：')
+    print('✅ Found these browser candidates:')
     for browser in browsers:
         print(f'  - {browser}')
 
@@ -62,7 +62,7 @@ def main() -> int:
     errors: list[str] = []
     with sync_playwright() as p:
         for browser_path in browsers:
-            print(f'尝试启动: {browser_path}')
+            print(f'Trying to launch: {browser_path}')
             try:
                 browser_obj = p.chromium.launch(executable_path=str(browser_path), headless=True)
                 page = browser_obj.new_page()
@@ -70,16 +70,16 @@ def main() -> int:
                 text = page.locator('body').inner_text()
                 browser_obj.close()
                 if text.strip() != 'ok':
-                    raise RuntimeError('浏览器启动了，但页面渲染异常')
-                print(f'✅ 浏览器启动测试通过: {browser_path}')
-                print('✅ 自检通过，可以启动价格提醒服务')
+                    raise RuntimeError('The browser launched, but the page did not render correctly')
+                print(f'✅ Browser launch test passed: {browser_path}')
+                print('✅ Environment check passed. You can start the price alert service now')
                 return 0
             except Exception as exc:
                 errors.append(f'{browser_path}: {exc}')
-                print(f'❌ 启动失败: {browser_path}')
+                print(f'❌ Launch failed: {browser_path}')
 
-    print('❌ 所有候选浏览器都启动失败')
-    print('建议：先关闭所有 Chrome 窗口后重试；如果还失败，把这段报错发我。')
+    print('❌ All browser candidates failed to launch')
+    print('Recommendation: close all Chrome windows and try again. If it still fails, share the error output.')
     for item in errors:
         print(f'  - {item}')
     return 1

@@ -10,19 +10,19 @@ APP_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
 CHECK_SCRIPT="$APP_DIR/scripts/prepublish_check.sh"
 
 cd "$APP_DIR" || {
-  echo "无法进入项目目录：$APP_DIR"
-  read '?按回车键关闭...'
+  echo "Unable to enter project directory: $APP_DIR"
+  read '?Press Enter to close...'
   exit 1
 }
 
 if ! "$CHECK_SCRIPT"; then
   code=$?
   echo ''
-  echo "上传前自检未通过，退出码：$code"
-  read '?按回车键关闭...'
+  echo "Pre-publish check failed with exit code: $code"
+  read '?Press Enter to close...'
   exit $code
 fi
 
 echo ''
-echo '上传前自检已通过。'
-read '?按回车键关闭...'
+echo 'Pre-publish check passed.'
+read '?Press Enter to close...'

@@ -40,7 +40,7 @@ def verify_session_payload(payload: Dict[str, Any]) -> Tuple[Dict[str, Any], int
     source_type = str(payload.get('source_type', 'ctrip')).strip() or 'ctrip'
     target_url = str(payload.get('target_url', '')).strip()
     if not target_url:
-        return {'error': '请先填写酒店链接'}, HTTPStatus.BAD_REQUEST
+        return {'error': 'Please enter a hotel URL first'}, HTTPStatus.BAD_REQUEST
     request_headers = str(payload.get('request_headers', '')).strip()
     headers = normalize_headers(request_headers or '{}', 'ctrip')
     headers = merge_cookie_into_headers(headers, str(payload.get('cookie', '')))
@@ -53,7 +53,7 @@ def debug_session_screenshot_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
     source_type = str(payload.get('source_type', 'ctrip')).strip() or 'ctrip'
     target_url = str(payload.get('target_url', '')).strip()
     if not target_url:
-        raise ValueError('请先填写酒店链接')
+        raise ValueError('Please enter a hotel URL first')
     request_headers = str(payload.get('request_headers', '')).strip()
     headers = normalize_headers(request_headers or '{}', 'ctrip')
     headers = merge_cookie_into_headers(headers, str(payload.get('cookie', '')))

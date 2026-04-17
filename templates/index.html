@@ -1,107 +1,107 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>携程酒店价格提醒</title>
+  <title>Ctrip Hotel Price Alert</title>
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
   <main class="page">
-    <section class="env-banner" aria-label="稳定版环境标识">
-      <strong>携程酒店提醒 · 稳定版</strong>
-      <span>当前地址：127.0.0.1:8766</span>
+    <section class="env-banner" aria-label="Stable environment marker">
+      <strong>Ctrip Hotel Alert · Stable</strong>
+      <span>Current address: 127.0.0.1:8766</span>
     </section>
 
     <section class="hero">
       <div>
-        <h1>携程酒店价格提醒 · 稳定版</h1>
-        <p>复制携程酒店链接，使用携程专用会话，按你的房型关键词监控降价。</p>
+        <h1>Ctrip Hotel Price Alert · Stable</h1>
+        <p>Paste a Ctrip hotel URL, use the dedicated Ctrip session, and track price drops by your room keyword.</p>
       </div>
-      <div class="hero-badge">适配：携程 · 稳定版</div>
+      <div class="hero-badge">Target: Ctrip · Stable</div>
     </section>
 
     <section class="card boot-card" id="settings-card">
-      <h2>监控设置</h2>
+      <h2>Watcher Settings</h2>
       <form id="watcher-form">
         <input type="hidden" name="room_type_meta" id="room_type_meta">
         <input type="hidden" name="edit_id" id="edit_id">
         <div class="grid">
           <label>
-            <span>平台</span>
-            <input value="携程" disabled>
+            <span>Platform</span>
+            <input value="Ctrip" disabled>
             <input type="hidden" name="source_type" id="source_type" value="ctrip">
           </label>
           <label>
-            <span>你的心理价位</span>
-            <input name="threshold_price" type="number" step="0.01" placeholder="例如 3200">
+            <span>Your target price</span>
+            <input name="threshold_price" type="number" step="0.01" placeholder="e.g. 3200">
           </label>
           <label>
-            <span>最低合理价格（防误抓）</span>
-            <input name="min_expected_price" type="number" step="0.01" placeholder="例如 2000">
+            <span>Minimum reasonable price (false-positive guard)</span>
+            <input name="min_expected_price" type="number" step="0.01" placeholder="e.g. 2000">
           </label>
           <label>
-            <span>轮询间隔（分钟）</span>
-            <input name="poll_interval_minutes" type="number" step="1" min="1" placeholder="例如 5">
+            <span>Polling interval (minutes)</span>
+            <input name="poll_interval_minutes" type="number" step="1" min="1" placeholder="e.g. 5">
           </label>
           <label class="full">
-            <span>酒店链接</span>
-            <input name="target_url" id="target_url" placeholder="直接粘贴酒店详情页链接" required>
+            <span>Hotel URL</span>
+            <input name="target_url" id="target_url" placeholder="Paste the hotel detail page URL directly" required>
           </label>
           <label>
-            <span>任务名称</span>
-            <input name="name" placeholder="例如：普吉岛拉查酒店" required>
+            <span>Watcher name</span>
+            <input name="name" placeholder="e.g. The Racha Phuket" required>
           </label>
           <label>
-            <span>酒店名称</span>
-            <input name="hotel_name" placeholder="例如：The Racha" required>
+            <span>Hotel name</span>
+            <input name="hotel_name" placeholder="e.g. The Racha" required>
           </label>
           <label class="full">
-            <span>指定房型关键词</span>
-            <input name="room_type_keyword" id="room_type_keyword" placeholder="例如：水疗泳池套房">
+            <span>Room keyword</span>
+            <input name="room_type_keyword" id="room_type_keyword" placeholder="e.g. Spa Pool Suite">
           </label>
           <label class="full">
-            <span>通知 Webhook / 机器人地址</span>
+            <span>Notification webhook / bot URL</span>
             <div class="inline-actions">
               <select name="notify_type" id="notify_type">
-                <option value="feishu">飞书</option>
-                <option value="wechat">企业微信</option>
+                <option value="feishu">Feishu</option>
+                <option value="wechat">WeCom</option>
               </select>
-              <input name="notify_target" id="notify_target" placeholder="填写 IM 机器人 webhook 地址，例如飞书或企业微信" required>
-              <button type="button" id="test-notify" class="secondary small">测试通知</button>
+              <input name="notify_target" id="notify_target" placeholder="Enter an IM bot webhook URL, such as Feishu or WeCom" required>
+              <button type="button" id="test-notify" class="secondary small">Send Test</button>
             </div>
           </label>
         </div>
 
         <div id="app-session-panel" class="session-panel">
-          <div id="session-title" class="session-title">专用登录</div>
-          <p id="session-hint" class="hint">携程使用独立专用登录态。先登录再查询价格会更稳定。</p>
+          <div id="session-title" class="session-title">Dedicated Sign-In</div>
+          <p id="session-hint" class="hint">Ctrip uses a dedicated session. Sign in first for more stable price checks.</p>
           <div class="inline-actions compact wrap-actions">
-            <button type="button" id="start-app-login" class="secondary">登录并保存会话</button>
-            <button type="button" id="finish-app-login" class="secondary">我已登录完成</button>
-            <button type="button" id="verify-app-session" class="secondary">验证登录态</button>
+            <button type="button" id="start-app-login" class="secondary">Sign in and save session</button>
+            <button type="button" id="finish-app-login" class="secondary">I have finished signing in</button>
+            <button type="button" id="verify-app-session" class="secondary">Verify session</button>
             <span id="session-status" class="status-text" aria-live="polite"></span>
           </div>
         </div>
 
         <details class="advanced">
-          <summary>高级设置（通常不用填）</summary>
+          <summary>Advanced settings (usually optional)</summary>
           <div class="grid advanced-grid">
             <label class="full">
-              <span>自定义请求头 JSON（高级用户才需要）</span>
-              <textarea name="request_headers" id="request_headers" rows="4" placeholder='例如：{"User-Agent":"Mozilla/..."}'></textarea>
+              <span>Custom request headers JSON (advanced users only)</span>
+              <textarea name="request_headers" id="request_headers" rows="4" placeholder='e.g. {"User-Agent":"Mozilla/..."}'></textarea>
             </label>
             <label class="full">
-              <span>自定义价格正则</span>
-              <input name="price_pattern" id="price_pattern" placeholder="通常不用填">
+              <span>Custom price regex</span>
+              <input name="price_pattern" id="price_pattern" placeholder="Usually not needed">
             </label>
           </div>
         </details>
 
         <p id="preset-hint" class="hint"></p>
         <div class="actions actions-row">
-          <button type="submit" id="submit-btn">开始监控</button>
-          <button type="button" id="cancel-edit-btn" class="secondary" hidden>取消编辑</button>
+          <button type="submit" id="submit-btn">Start Monitoring</button>
+          <button type="button" id="cancel-edit-btn" class="secondary" hidden>Cancel Edit</button>
           <span id="form-status" class="status-text" aria-live="polite"></span>
         </div>
       </form>
@@ -109,26 +109,26 @@
 
     <section id="debug-panel" class="card debug-panel" hidden>
       <div class="list-head">
-        <h2>诊断信息</h2>
+        <h2>Diagnostics</h2>
         <div class="inline-actions compact">
-          <button id="copy-debug" class="secondary">复制全部诊断信息</button>
-          <button id="hide-debug" class="secondary">收起</button>
+          <button id="copy-debug" class="secondary">Copy all diagnostics</button>
+          <button id="hide-debug" class="secondary">Hide</button>
         </div>
       </div>
-      <p class="hint">遇到问题时，把下面内容复制给我，定位会更快。</p>
+      <p class="hint">If something goes wrong, copy the details below for faster troubleshooting.</p>
       <pre id="debug-output" class="debug-output"></pre>
     </section>
 
     <section class="card boot-card" id="watchers-card">
       <div class="list-head">
-        <h2>监控列表</h2>
+        <h2>Watchers</h2>
         <div class="inline-actions compact">
-          <button id="refresh-btn" class="secondary">刷新</button>
+          <button id="refresh-btn" class="secondary">Refresh</button>
           <span id="list-status" class="status-text" aria-live="polite"></span>
         </div>
       </div>
       <p id="meta" class="hint"></p>
-      <p id="build-info" class="hint">页面版本：2026-04-07-ctrip-price-card-v1</p>
+      <p id="build-info" class="hint">Page version: 2026-04-07-ctrip-price-card-v1</p>
       <div id="watcher-list" class="list"></div>
     </section>
   </main>
@@ -178,13 +178,13 @@
       try {
         response = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...options });
       } catch (networkError) {
-        const error = new Error('网页没连上本地服务。请先重新双击“酒店提醒-一键启动最稳定版.command”。');
+        const error = new Error('The page could not reach the local service. Please relaunch the stable starter command.');
         error.debug = null;
         throw error;
       }
       const data = await response.json();
       if (!response.ok) {
-        const error = new Error(data.error || '请求失败');
+        const error = new Error(data.error || 'Request failed');
         error.debug = data.debug || data.page_debug || null;
         throw error;
       }
@@ -192,13 +192,13 @@
     }
 
     function fmtPrice(currency, value) {
-      if (value === null || value === undefined || value === '') return '未检测';
+      if (value === null || value === undefined || value === '') return 'Not checked';
       return `${currency} ${Number(value).toFixed(2)}`;
     }
 
 
     function fmtDateTimeUtc8(value) {
-      if (!value) return '从未检查';
+      if (!value) return 'Never checked';
       const normalized = String(value).replace(' UTC', 'Z').replace(' ', 'T');
       const date = new Date(normalized);
       if (Number.isNaN(date.getTime())) return value;
@@ -222,20 +222,20 @@
       const date = parseUtcValue(value);
       if (!date) return '';
       const diffSeconds = Math.round((date.getTime() - Date.now()) / 1000);
-      if (diffSeconds <= 0) return '（即将检查）';
+      if (diffSeconds <= 0) return '(checking soon)';
       const hours = Math.floor(diffSeconds / 3600);
       const minutes = Math.floor((diffSeconds % 3600) / 60);
       const seconds = diffSeconds % 60;
       const parts = [];
-      if (hours > 0) parts.push(`${hours}小时`);
-      if (minutes > 0 || hours > 0) parts.push(`${minutes}分`);
-      parts.push(`${seconds}秒后`);
-      return `（约 ${parts.join(' ')}）`;
+      if (hours > 0) parts.push(`${hours}h`);
+      if (minutes > 0 || hours > 0) parts.push(`${minutes}m`);
+      parts.push(`${seconds}s remaining`);
+      return `(~ ${parts.join(' ')}）`;
     }
 
     function resetFormMode() {
       document.getElementById('edit_id').value = '';
-      document.getElementById('submit-btn').textContent = '开始监控';
+      document.getElementById('submit-btn').textContent = 'Start Monitoring';
       document.getElementById('cancel-edit-btn').hidden = true;
       setStatus('form-status', '');
     }
@@ -255,10 +255,10 @@
       document.getElementById('notify_target').value = item.notify_target || '';
       document.getElementById('request_headers').value = item.request_headers || '{}';
       document.getElementById('price_pattern').value = item.price_pattern || '';
-      document.getElementById('submit-btn').textContent = '保存修改';
+      document.getElementById('submit-btn').textContent = 'Save Changes';
       document.getElementById('cancel-edit-btn').hidden = false;
       updateLoginPanel();
-      setStatus('form-status', `正在编辑：${item.name}`);
+      setStatus('form-status', `Editing: ${item.name}`);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -336,20 +336,20 @@
       const output = document.getElementById('debug-output');
       const debug = error?.debug || null;
       const pageDebug = debug?.page_debug || null;
-      const payload = { time: new Date().toISOString(), message: error?.message || '未知错误', context, debug };
+      const payload = { time: new Date().toISOString(), message: error?.message || 'Unknown error', context, debug };
       latestDebugText = JSON.stringify(payload, null, 2);
       const summary = [];
       if (pageDebug) {
-        summary.push(`页面标题: ${pageDebug.title || '(空)'}`);
-        summary.push(`最终链接: ${pageDebug.final_url || '(空)'}`);
-        summary.push(`房型块数量: ${pageDebug.room_block_count ?? 0}`);
+        summary.push(`Page title: ${pageDebug.title || '(empty)'}`);
+        summary.push(`Final URL: ${pageDebug.final_url || '(empty)'}`);
+        summary.push(`Room block count: ${pageDebug.room_block_count ?? 0}`);
       }
       output.textContent = (summary.length ? summary.join('\n') + '\n\n' : '') + latestDebugText;
       panel.hidden = false;
     }
 
     function renderTags(tags = []) {
-      if (!tags.length) return '<span class="tag muted">无附加标签</span>';
+      if (!tags.length) return '<span class="tag muted">No extra tags</span>';
       return tags.map((tag) => `<span class="tag">${tag}</span>`).join('');
     }
 
@@ -387,11 +387,11 @@
     }
 
     function renderSparkline(history = []) {
-      if (!history.length) return '<div class="spark-empty">暂无历史价格</div>';
+      if (!history.length) return '<div class="spark-empty">No price history yet</div>';
       const items = history
         .map((item) => ({ price: Number(item.price), checked_at: item.checked_at }))
         .filter((item) => Number.isFinite(item.price));
-      if (!items.length) return '<div class="spark-empty">暂无历史价格</div>';
+      if (!items.length) return '<div class="spark-empty">No price history yet</div>';
       const values = items.map((item) => item.price);
       const width = 280;
       const height = 132;
@@ -415,8 +415,8 @@
       const gradientId = `spark-gradient-${Math.random().toString(36).slice(2, 8)}`;
       return `
         <div class="chart-wrap">
-          <div class="chart-caption">横轴：检查时间　纵轴：价格（CNY）</div><div class="chart-tooltip" hidden>悬停点位查看详情</div>
-          <svg class="sparkline" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img" aria-label="价格趋势图">
+          <div class="chart-caption">X-axis: check time   Y-axis: price (CNY)</div><div class="chart-tooltip" hidden>Hover over a point for details</div>
+          <svg class="sparkline" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img" aria-label="Price trend chart">
             <defs>
               <linearGradient id="${gradientId}" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stop-color="rgba(37,99,235,0.22)" />
@@ -444,9 +444,9 @@
                   <title>${fmtFullTimeUtc8(item.checked_at)} · ¥${Math.round(item.price)}</title>
                 </circle>
               </g>`).join('')}
-            <text x="${leftPad + plotWidth - 2}" y="${topPad + 10}" text-anchor="end" font-size="10" fill="#1d4ed8">最新 ${lastPriceLabel}</text>
+            <text x="${leftPad + plotWidth - 2}" y="${topPad + 10}" text-anchor="end" font-size="10" fill="#1d4ed8">Latest ${lastPriceLabel}</text>
             <text x="${leftPad}" y="${height - 10}" font-size="10" fill="#64748b">${fmtShortTimeUtc8(first.checked_at)}</text>
-            <text x="${leftPad + plotWidth / 2}" y="${height - 10}" text-anchor="middle" font-size="10" fill="#94a3b8">时间</text>
+            <text x="${leftPad + plotWidth / 2}" y="${height - 10}" text-anchor="middle" font-size="10" fill="#94a3b8">Time</text>
             <text x="${leftPad + plotWidth}" y="${height - 10}" text-anchor="end" font-size="10" fill="#64748b">${fmtShortTimeUtc8(last.checked_at)}</text>
           </svg>
         </div>`;
@@ -470,10 +470,10 @@
 
     function sessionPlatformMeta(sourceType) {
       return {
-        label: '携程',
+        label: 'Ctrip',
         defaultUrl: 'https://hotels.ctrip.com/',
-        hint: '携程使用独立专用登录态。先登录再查询价格会更稳定。',
-        startText: '登录携程并保存会话',
+        hint: 'Ctrip uses a dedicated session. Sign in first for more stable price checks.',
+        startText: 'Sign in to Ctrip and save session',
       };
     }
 
@@ -483,9 +483,9 @@
       try {
         const data = await request(`/api/app-session-status?source_type=${encodeURIComponent(sourceType)}`);
         const meta = sessionPlatformMeta(sourceType);
-        if (data.login_running) return setStatus('session-status', `${meta.label} 登录窗口已打开，登录完成后点“我已登录完成”`);
-        if (data.last_error) return setStatus('session-status', `登录窗口异常：${data.last_error}`, true);
-        setStatus('session-status', data.exists ? `已存在 ${meta.label} 专用登录态，可直接验证` : `还没有 ${meta.label} 专用登录态`);
+        if (data.login_running) return setStatus('session-status', `${meta.label} The sign-in window is open. Click “I have finished signing in” after you complete sign-in`);
+        if (data.last_error) return setStatus('session-status', `Sign-in window error: ${data.last_error}`, true);
+        setStatus('session-status', data.exists ? `A dedicated ${meta.label} session is already saved and ready to verify` : `No dedicated ${meta.label} session has been saved yet`);
       } catch (_) {}
     }
 
@@ -498,7 +498,7 @@
       panel.hidden = !sourceType;
       if (!sourceType) return;
       const meta = sessionPlatformMeta(sourceType);
-      title.textContent = `${meta.label} 登录`;
+      title.textContent = `${meta.label} Sign-In`;
       hint.textContent = meta.hint;
       startButton.textContent = meta.startText;
       loadAppSessionStatus();
@@ -554,11 +554,11 @@
       const root = document.getElementById('watcher-list');
       root.innerHTML = '';
       if (!currentWatchers.length) {
-        root.innerHTML = '<div class="empty">还没有监控任务，先添加一个吧。</div>';
+        root.innerHTML = '<div class="empty">No watchers yet. Add your first one.</div>';
         return;
       }
       currentWatchers.forEach((item) => {
-        const roomLine = item.room_type_keyword ? `<p>房型：${item.room_type_keyword}</p>` : '';
+        const roomLine = item.room_type_keyword ? `<p>Room: ${item.room_type_keyword}</p>` : '';
         const tagsLine = item.room_type_keyword ? `<div class="inline-tag-list">${renderTags(item.room_type_tags || [])}</div>` : '';
         const chart = renderSparkline(item.history || []);
         const lowestInfo = (item.all_time_low_price !== null && item.all_time_low_price !== undefined)
@@ -572,28 +572,28 @@
             <p>${item.hotel_name} · ${item.source_label}</p>
             ${roomLine}
             ${tagsLine}
-            <p>当前价：${fmtPrice(item.currency, item.last_price)}</p>
+            <p>Current: ${fmtPrice(item.currency, item.last_price)}</p>
             ${item.last_price_note ? `<p class="hint">${item.last_price_note}</p>` : ''}
-            <p>目标价：${item.threshold_price ? fmtPrice(item.currency, item.threshold_price) : '未设置'}</p>
-            <p>最低合理价格：${item.min_expected_price ? fmtPrice(item.currency, item.min_expected_price) : '未设置'}</p>
-            <p>轮询间隔：${item.poll_interval_minutes || 5} 分钟（实际会有少量错峰抖动）</p>
-            <p>上次检查：${fmtDateTimeUtc8(item.last_checked_at)}</p>
-            <p>预计下次检查：${fmtDateTimeUtc8(item.next_check_at)} <span class="countdown-text" data-next-check-at="${item.next_check_at || ''}">${fmtCountdown(item.next_check_at)}</span></p>
-            <p>状态：${item.last_error ? `异常 - ${item.last_error}` : '正常'}</p>
+            <p>Target: ${item.threshold_price ? fmtPrice(item.currency, item.threshold_price) : 'Not set'}</p>
+            <p>Minimum reasonable price: ${item.min_expected_price ? fmtPrice(item.currency, item.min_expected_price) : 'Not set'}</p>
+            <p>Polling interval: ${item.poll_interval_minutes || 5} min (with a small built-in stagger)</p>
+            <p>Last check: ${fmtDateTimeUtc8(item.last_checked_at)}</p>
+            <p>Expected next check: ${fmtDateTimeUtc8(item.next_check_at)} <span class="countdown-text" data-next-check-at="${item.next_check_at || ''}">${fmtCountdown(item.next_check_at)}</span></p>
+            <p>Status: ${item.last_error ? `Error - ${item.last_error}` : 'OK'}</p>
             <div class="watcher-toolbar">
-              <button data-id="${item.id}" data-action="edit" class="secondary">编辑</button>
-              <button data-id="${item.id}" data-action="open" class="secondary">打开链接</button>
-              <button data-id="${item.id}" data-action="copy-link" class="secondary">复制链接</button>
-              <button data-id="${item.id}" data-action="check"${watcherActionAttrs(item.id, 'check')}>${watcherActionText(item.id, 'check', '立即检查')}</button>
-              <button data-id="${item.id}" data-action="toggle"${watcherActionAttrs(item.id, 'toggle', 'secondary')}>${watcherActionText(item.id, 'toggle', item.is_active ? '暂停' : '启用')}</button>
-              <button data-id="${item.id}" data-action="delete"${watcherActionAttrs(item.id, 'delete', 'danger')}>${watcherActionText(item.id, 'delete', '删除')}</button>
+              <button data-id="${item.id}" data-action="edit" class="secondary">Edit</button>
+              <button data-id="${item.id}" data-action="open" class="secondary">Open link</button>
+              <button data-id="${item.id}" data-action="copy-link" class="secondary">Copy link</button>
+              <button data-id="${item.id}" data-action="check"${watcherActionAttrs(item.id, 'check')}>${watcherActionText(item.id, 'check', 'Check now')}</button>
+              <button data-id="${item.id}" data-action="toggle"${watcherActionAttrs(item.id, 'toggle', 'secondary')}>${watcherActionText(item.id, 'toggle', item.is_active ? 'Pause' : 'Enable')}</button>
+              <button data-id="${item.id}" data-action="delete"${watcherActionAttrs(item.id, 'delete', 'danger')}>${watcherActionText(item.id, 'delete', 'Delete')}</button>
             </div>
             <div class="trend-block">
               <div class="trend-head">
-                <div class="trend-title">最近价格趋势</div>
+                <div class="trend-title">Recent price trend</div>
                 <div class="trend-low">
-                  监控以来最低价：<strong>${lowestInfo ? fmtPrice(item.currency, lowestInfo.price) : '暂无数据'}</strong>
-                  <span>${lowestInfo ? `出现于 ${fmtDateTimeUtc8(lowestInfo.checked_at)}` : ''}</span>
+                  Lowest price since monitoring started: <strong>${lowestInfo ? fmtPrice(item.currency, lowestInfo.price) : 'No data yet'}</strong>
+                  <span>${lowestInfo ? `Seen at ${fmtDateTimeUtc8(lowestInfo.checked_at)}` : ''}</span>
                 </div>
               </div>
               ${chart}
@@ -609,53 +609,53 @@
       const { silent = false } = options;
       if (!silent) {
         renderWatcherSkeletons(currentWatchers.length || 3);
-        document.getElementById('meta').textContent = '正在加载监控列表...';
+        document.getElementById('meta').textContent = 'Loading watchers...';
       }
       const data = await request('/api/watchers');
       currentWatchers = data.items || [];
-      document.getElementById('meta').textContent = `每条监控可单独设置分钟级轮询间隔，实际执行会自动加入少量错峰抖动。`;
+      document.getElementById('meta').textContent = `Each watcher can use its own minute-level polling interval. Actual runs are slightly staggered automatically.`;
       const buildInfo = document.getElementById('build-info');
-      if (buildInfo && data.build_version) buildInfo.textContent = `页面版本：${data.build_version}`;
+      if (buildInfo && data.build_version) buildInfo.textContent = `Page version: ${data.build_version}`;
       renderWatchers();
     }
 
     document.getElementById('copy-debug').addEventListener('click', async () => {
-      if (!latestDebugText) return showToast('当前没有可复制的诊断信息', true);
-      try { await navigator.clipboard.writeText(latestDebugText); showToast('诊断信息已复制'); }
-      catch (_) { showToast('复制失败，请手动复制', true); }
+      if (!latestDebugText) return showToast('There are no diagnostics to copy right now', true);
+      try { await navigator.clipboard.writeText(latestDebugText); showToast('Diagnostics copied'); }
+      catch (_) { showToast('Copy failed. Please copy it manually', true); }
     });
 
     document.getElementById('hide-debug').addEventListener('click', clearDebug);
     document.getElementById('source_type').addEventListener('change', () => { updatePresetHint(); updateLoginPanel(); });
 
     document.getElementById('test-notify').addEventListener('click', async (event) => {
-      const restore = setButtonLoading(event.currentTarget, '发送中...');
+      const restore = setButtonLoading(event.currentTarget, 'Sending...');
       const webhook = document.getElementById('notify_target').value.trim();
       const notifyType = document.getElementById('notify_type').value;
-      setStatus('form-status', '正在发送测试通知...');
+      setStatus('form-status', 'Sending a test notification...');
       clearDebug();
       try {
         await request('/api/test-notify', { method: 'POST', body: JSON.stringify({ notify_target: webhook, notify_type: notifyType }) });
-        setStatus('form-status', '测试通知已发送，请去对应 IM 确认');
-        showToast('测试通知已发送，请去对应 IM 确认');
+        setStatus('form-status', 'Test notification sent. Please confirm it in your IM app.');
+        showToast('Test notification sent. Please confirm it in your IM app.');
       } catch (error) {
         setStatus('form-status', error.message, true);
         renderDebug(error, { action: 'test_notify', webhook, notify_type: notifyType });
-        showToast('测试通知失败，详细诊断已展开', true);
+        showToast('Test notification failed. Diagnostics are shown below.', true);
       } finally { restore(); }
     });
 
     document.getElementById('watcher-form').addEventListener('submit', async (event) => {
       event.preventDefault();
-      const restore = setButtonLoading(document.getElementById('submit-btn'), '保存中...');
+      const restore = setButtonLoading(document.getElementById('submit-btn'), 'Saving...');
       const form = new FormData(event.target);
       const payload = Object.fromEntries(form.entries());
       payload.use_app_session_profile = true;
       if (payload.request_headers && payload.request_headers.trim()) {
         try { JSON.parse(payload.request_headers); } catch (_) {
           restore();
-          setStatus('form-status', '请求头 JSON 格式不正确', true);
-          return showToast('自定义请求头 JSON 格式不正确', true);
+          setStatus('form-status', 'Request headers JSON is invalid', true);
+          return showToast('Custom request headers JSON is invalid', true);
         }
       }
       clearDebug();
@@ -666,25 +666,25 @@
         await request(url, { method: 'POST', body: JSON.stringify(payload) });
         await loadWatchers();
         resetFormMode();
-        setStatus('form-status', isEdit ? '监控已更新' : '监控已创建，表单内容已保留');
-        showToast(isEdit ? '监控已更新' : '监控已创建，表单内容已保留');
+        setStatus('form-status', isEdit ? 'Watcher updated' : 'Watcher created. Your form values were kept.');
+        showToast(isEdit ? 'Watcher updated' : 'Watcher created. Your form values were kept.');
       } catch (error) {
         setStatus('form-status', error.message, true);
         renderDebug(error, { action: 'create_watcher', payload });
-        showToast('创建监控失败，详细诊断已展开', true);
+        showToast('Failed to create the watcher. Diagnostics are shown below.', true);
       } finally { restore(); }
     });
 
     document.getElementById('refresh-btn').addEventListener('click', async (event) => {
-      const restore = setButtonLoading(event.currentTarget, '刷新中...');
+      const restore = setButtonLoading(event.currentTarget, 'Refreshing...');
       try {
         await loadWatchers();
-        setStatus('list-status', '列表已刷新');
-        showToast('列表已刷新');
+        setStatus('list-status', 'Watcher list refreshed');
+        showToast('Watcher list refreshed');
       } catch (error) {
         setStatus('list-status', error.message, true);
         renderDebug(error, { action: 'refresh_watchers' });
-        showToast('刷新失败，详细诊断已展开', true);
+        showToast('Refresh failed. Diagnostics are shown below.', true);
       } finally { restore(); }
     });
 
@@ -695,48 +695,48 @@
       const action = button.dataset.action;
       const item = currentWatchers.find((entry) => Number(entry.id) === id);
       if (action === 'delete') {
-        if (!window.confirm('确定要删除这个监控吗？删除后历史价格也会一起移除。')) return;
+        if (!window.confirm('Are you sure you want to delete this watcher? Its price history will be removed too.')) return;
       }
       if (action === 'edit') {
         if (item) fillFormForEdit(item);
-        setStatus('list-status', '已载入编辑表单');
-        return showToast('已载入编辑表单');
+        setStatus('list-status', 'Loaded into the edit form');
+        return showToast('Loaded into the edit form');
       }
       if (action === 'open') {
         if (item?.target_url) window.open(item.target_url, '_blank');
-        setStatus('list-status', '已打开酒店链接');
-        return showToast('已打开酒店链接');
+        setStatus('list-status', 'Hotel URL opened');
+        return showToast('Hotel URL opened');
       }
       if (action === 'copy-link') {
-        try { await navigator.clipboard.writeText(item?.target_url || ''); showToast('已复制酒店链接'); setStatus('list-status', '已复制酒店链接'); }
-        catch (_) { showToast('复制链接失败', true); setStatus('list-status', '复制链接失败', true); }
+        try { await navigator.clipboard.writeText(item?.target_url || ''); showToast('Hotel URL copied'); setStatus('list-status', 'Hotel URL copied'); }
+        catch (_) { showToast('Failed to copy the link', true); setStatus('list-status', 'Failed to copy the link', true); }
         return;
       }
-      const loadingText = action === 'check' ? '检查中...' : action === 'delete' ? '删除中...' : '处理中...';
+      const loadingText = action === 'check' ? 'Checking...' : action === 'delete' ? 'Deleting...' : 'Processing...';
       const restore = setButtonLoading(button, loadingText);
       if (action === 'check' || action === 'toggle' || action === 'delete') markWatcherActionPending(id, action, loadingText);
       clearDebug();
       try {
         if (action === 'check') {
-          setStatus('list-status', '正在检查价格，请等待结果返回...');
+          setStatus('list-status', 'Checking the latest price. Please wait...');
           const result = await request('/api/check-now', { method: 'POST', body: JSON.stringify({ id }) });
           const note = result.price_note ? `（${result.price_note}）` : '';
-          const text = result.notified ? `已提醒，最新价格 ${result.price}${note}` : `检查完成，最新价格 ${result.price}${note}`;
+          const text = result.notified ? `Notification sent. Latest price: ${result.price}${note}` : `Check complete. Latest price: ${result.price}${note}`;
           setStatus('list-status', text); showToast(text);
         }
         if (action === 'toggle') {
-          await request('/api/toggle', { method: 'POST', body: JSON.stringify({ id, is_active: button.textContent === '启用' || button.dataset.originalText === '启用' }) });
-          setStatus('list-status', '状态已更新'); showToast('状态已更新');
+          await request('/api/toggle', { method: 'POST', body: JSON.stringify({ id, is_active: button.textContent === 'Enable' || button.dataset.originalText === 'Enable' }) });
+          setStatus('list-status', 'Status updated'); showToast('Status updated');
         }
         if (action === 'delete') {
           await request('/api/delete', { method: 'POST', body: JSON.stringify({ id }) });
-          setStatus('list-status', '监控已删除'); showToast('监控已删除');
+          setStatus('list-status', 'Watcher deleted'); showToast('Watcher deleted');
         }
         await loadWatchers();
       } catch (error) {
         setStatus('list-status', error.message, true);
         renderDebug(error, { action, id });
-        showToast('操作失败，详细诊断已展开', true);
+        showToast('Action failed. Diagnostics are shown below', true);
       } finally {
         if (action === 'check' || action === 'toggle' || action === 'delete') clearWatcherActionPending(id, action);
         restore();
@@ -744,53 +744,53 @@
     });
 
     document.getElementById('start-app-login').addEventListener('click', async (event) => {
-      const restore = setButtonLoading(event.currentTarget, '打开中...');
+      const restore = setButtonLoading(event.currentTarget, 'Opening...');
       const source_type = currentSessionPlatform() || 'ctrip';
       const target_url = document.getElementById('target_url').value.trim() || sessionPlatformMeta(source_type).defaultUrl;
       clearDebug();
       try {
         const data = await request('/api/start-ctrip-login', { method: 'POST', body: JSON.stringify({ source_type, target_url }) });
-        setStatus('session-status', data.message || '登录窗口已打开');
-        showToast(data.message || '登录窗口已打开');
+        setStatus('session-status', data.message || 'The sign-in window is open');
+        showToast(data.message || 'The sign-in window is open');
       } catch (error) {
         setStatus('session-status', error.message, true);
         renderDebug(error, { action: 'start_app_login', source_type, target_url });
-        showToast('打开登录窗口失败，详细诊断已展开', true);
+        showToast('Failed to open the sign-in window. Diagnostics are shown below', true);
       } finally { restore(); loadAppSessionStatus(); }
     });
 
     document.getElementById('finish-app-login').addEventListener('click', async (event) => {
-      const restore = setButtonLoading(event.currentTarget, '保存中...');
+      const restore = setButtonLoading(event.currentTarget, 'Saving...');
       clearDebug();
       try {
         const source_type = currentSessionPlatform() || 'ctrip';
         const data = await request('/api/finish-ctrip-login', { method: 'POST', body: JSON.stringify({ source_type }) });
-        setStatus('session-status', data.message || '专用登录态已保存');
-        showToast(data.message || '专用登录态已保存');
+        setStatus('session-status', data.message || 'Dedicated session saved');
+        showToast(data.message || 'Dedicated session saved');
       } catch (error) {
         setStatus('session-status', error.message, true);
         renderDebug(error, { action: 'finish_app_login', source_type: currentSessionPlatform() || 'ctrip' });
-        showToast('保存登录态失败，详细诊断已展开', true);
+        showToast('Failed to save the session. Diagnostics are shown below', true);
       } finally { restore(); loadAppSessionStatus(); }
     });
 
     document.getElementById('verify-app-session').addEventListener('click', async (event) => {
-      const restore = setButtonLoading(event.currentTarget, '验证中...');
+      const restore = setButtonLoading(event.currentTarget, 'Verifying...');
       const source_type = document.getElementById('source_type').value;
       const target_url = document.getElementById('target_url').value.trim();
       const request_headers = document.getElementById('request_headers').value.trim();
       if (!target_url) {
-        restore(); setStatus('session-status', '请先填写酒店链接', true); return showToast('请先填写酒店链接', true);
+        restore(); setStatus('session-status', 'Please enter a hotel URL first', true); return showToast('Please enter a hotel URL first', true);
       }
       clearDebug();
       try {
         const data = await request('/api/verify-app-session', { method: 'POST', body: JSON.stringify({ source_type, target_url, request_headers, cookie: '' }) });
-        setStatus('session-status', data.message || '专用登录态可用');
-        showToast(data.message || '专用登录态可用');
+        setStatus('session-status', data.message || 'Dedicated session is ready');
+        showToast(data.message || 'Dedicated session is ready');
       } catch (error) {
         setStatus('session-status', error.message, true);
         renderDebug(error, { action: 'verify_app_session', source_type, target_url });
-        showToast('登录态验证失败，详细诊断已展开', true);
+        showToast('Session verification failed. Diagnostics are shown below', true);
       } finally {
         restore();
       }
@@ -815,14 +815,14 @@
       updateLoginPanel();
       setSectionBooting('settings', false);
       if (failed && failed.reason) {
-        setStatus('form-status', failed.reason.message || '设置区初始化失败', true);
+        setStatus('form-status', failed.reason.message || 'Failed to initialize the settings panel', true);
       }
     });
 
     loadWatchers({ silent: true }).catch((error) => {
       setStatus('list-status', error.message, true);
       renderDebug(error, { action: 'initial_watchers_load' });
-      showToast('监控列表初始化失败，详细诊断已展开', true);
+      showToast('Failed to initialize the watcher list. Diagnostics are shown below.', true);
     }).finally(() => {
       setSectionBooting('watchers', false);
     });

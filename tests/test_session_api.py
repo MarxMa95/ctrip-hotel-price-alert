@@ -42,7 +42,7 @@ class SessionApiTests(unittest.TestCase):
             'target_url': 'https://example.com',
             'request_headers': '{}',
             'cookie': '',
-            'room_type_keyword': '套房',
+            'room_type_keyword': 'Suite',
             'focus_room': True,
         })
         self.assertTrue(payload['ok'])

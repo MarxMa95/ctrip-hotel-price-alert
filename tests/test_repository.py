@@ -20,12 +20,12 @@ class RepositoryTests(unittest.TestCase):
 
     def test_watcher_crud_and_history(self):
         watcher_id = repository.create_watcher({
-            'name': '测试任务',
-            'hotel_name': '测试酒店',
+            'name': 'Test Task',
+            'hotel_name': 'Test Hotel',
             'source_type': 'ctrip',
             'target_url': 'https://example.com/hotel',
-            'room_type_keyword': '豪华大床房',
-            'room_type_meta': '含早 | 免费取消',
+            'room_type_keyword': 'Deluxe King Room',
+            'room_type_meta': 'Breakfast included | Free cancellation',
             'price_pattern': '',
             'currency': 'CNY',
             'notify_type': 'feishu',
@@ -41,16 +41,16 @@ class RepositoryTests(unittest.TestCase):
 
         watcher = repository.find_watcher(watcher_id)
         self.assertIsNotNone(watcher)
-        self.assertEqual(watcher.name, '测试任务')
+        self.assertEqual(watcher.name, 'Test Task')
         self.assertIn('Cookie', watcher.parsed_headers())
 
         repository.update_watcher(watcher_id, {
-            'name': '测试任务2',
-            'hotel_name': '测试酒店2',
+            'name': 'Test Task2',
+            'hotel_name': 'Test Hotel2',
             'source_type': 'ctrip',
             'target_url': 'https://example.com/hotel-2',
-            'room_type_keyword': '海景套房',
-            'room_type_meta': '双早',
+            'room_type_keyword': 'Ocean View Suite',
+            'room_type_meta': 'Breakfast for 2',
             'price_pattern': '',
             'currency': 'CNY',
             'notify_type': 'feishu',
@@ -64,16 +64,16 @@ class RepositoryTests(unittest.TestCase):
             'use_browser': True,
         })
         updated = repository.find_watcher(watcher_id)
-        self.assertEqual(updated.name, '测试任务2')
+        self.assertEqual(updated.name, 'Test Task2')
         self.assertEqual(updated.poll_interval_minutes, 10)
 
         repository.set_watcher_active(watcher_id, 0)
         toggled = repository.find_watcher(watcher_id)
         self.assertEqual(toggled.is_active, 0)
 
-        repository.update_check_result(watcher_id, 1688.0, True, None, '命中房型块')
-        repository.update_check_result(watcher_id, 1888.0, False, None, '再次检查')
-        repository.update_check_result(watcher_id, 1688.0, False, None, '再次命中历史低价')
+        repository.update_check_result(watcher_id, 1688.0, True, None, 'Matched a room block')
+        repository.update_check_result(watcher_id, 1888.0, False, None, 'Checked again')
+        repository.update_check_result(watcher_id, 1688.0, False, None, 'Matched the historical low again')
         history = repository.list_history(watcher_id)
         self.assertEqual(len(history), 3)
         self.assertEqual(history[0]['price'], 1688.0)

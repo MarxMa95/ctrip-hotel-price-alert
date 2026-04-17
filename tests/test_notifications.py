@@ -15,12 +15,12 @@ class NotificationTests(unittest.TestCase):
     def _watcher(self, **overrides):
         data = dict(
             id=1,
-            name='任务',
-            hotel_name='酒店',
+            name='Task',
+            hotel_name='Hotel',
             source_type='ctrip',
             target_url='https://example.com',
-            room_type_keyword='豪华大床房',
-            room_type_meta='含早 | 免费取消',
+            room_type_keyword='Deluxe King Room',
+            room_type_meta='Breakfast included | Free cancellation',
             price_pattern='',
             currency='CNY',
             notify_type='feishu',
@@ -68,14 +68,14 @@ class NotificationTests(unittest.TestCase):
         payload = build_feishu_payload(watcher, 1800.0, 'threshold_hit')
         self.assertEqual(payload['msg_type'], 'interactive')
         self.assertEqual(payload['card']['header']['template'], 'red')
-        self.assertIn('已达到目标价格', payload['card']['header']['title']['content'])
+        self.assertIn('Target price reached', payload['card']['header']['title']['content'])
 
     def test_build_price_drop_feishu_card(self):
         watcher = self._watcher(last_price=2500.0, threshold_price=1800.0)
         payload = build_feishu_payload(watcher, 2100.0, 'price_drop')
         self.assertEqual(payload['card']['header']['template'], 'orange')
         text = build_notification_text(watcher, 2100.0, 'price_drop')
-        self.assertIn('未达目标价', text)
+        self.assertIn('target price has not been reached yet', text)
 
     @patch('hotel_price_alert.notifications.send_feishu_webhook')
     @patch('hotel_price_alert.notifications.send_feishu_at_all')

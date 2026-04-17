@@ -9,14 +9,14 @@ DOCTOR_SCRIPT="$SCRIPT_DIR/doctor.py"
 cd "$APP_DIR" || exit 1
 
 if [[ -z "$PYTHON_BIN" || ! -x "$PYTHON_BIN" ]]; then
-  echo "未找到可用 Python，请先安装 Python 3"
+  echo "No usable Python interpreter found. Please install Python 3 first"
   exit 1
 fi
 
 if ! "$PYTHON_BIN" "$DOCTOR_SCRIPT"; then
   echo ''
-  echo '启动前自检失败，服务不会继续启动。'
-  echo '请查看上面的中文提示。'
+  echo 'The pre-start environment check failed. The service will not continue starting.'
+  echo 'Please review the messages above.'
   exit 1
 fi
 

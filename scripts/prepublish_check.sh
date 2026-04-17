@@ -8,7 +8,7 @@ PYTHON_BIN="${PYTHON_BIN:-$(command -v python3 || true)}"
 cd "$APP_DIR"
 
 if [[ -z "$PYTHON_BIN" || ! -x "$PYTHON_BIN" ]]; then
-  echo '未找到可用的 python3，无法执行上传前自检。'
+  echo 'No usable python3 interpreter was found. Cannot run the pre-publish check.'
   exit 1
 fi
 
@@ -26,9 +26,9 @@ inside_git = subprocess.run(
     text=True,
 ).returncode == 0
 
-print('==> 上传前自检开始')
-print(f'工作目录: {repo}')
-print(f"Git 仓库: {'是' if inside_git else '否'}")
+print('==> Starting pre-publish check')
+print(f'Working directory: {repo}')
+print(f"Git repository: {'yes' if inside_git else 'no'}")
 
 if inside_git:
     tracked = subprocess.run(
@@ -38,7 +38,7 @@ if inside_git:
         check=True,
     ).stdout.decode('utf-8', errors='ignore').split('\0')
     scan_files = [item for item in tracked if item]
-    scan_mode_label = 'Git 已跟踪文件'
+    scan_mode_label = 'Git-tracked files'
 else:
     scan_files = []
     for path in repo.rglob('*'):
@@ -48,11 +48,11 @@ else:
         if rel.startswith('.git/'):
             continue
         scan_files.append(rel)
-    scan_mode_label = '当前项目源码文件（非 Git 模式预检）'
+    scan_mode_label = 'Current project files (non-Git preview mode)'
 
 sensitive_prefixes = ('logs/', 'session_profiles/', 'debug_screens/')
 
-print('1/3 检查敏感运行数据')
+print('1/3 Check sensitive runtime data')
 sensitive_hits = []
 for path in scan_files:
     if path == 'data.db' or path.startswith(sensitive_prefixes):
@@ -60,21 +60,21 @@ for path in scan_files:
 
 if inside_git:
     if sensitive_hits:
-        print('发现不应提交但已经被 Git 跟踪的运行时文件/目录：')
+        print('Found runtime files/directories that should not be committed but are already tracked by Git:')
         for item in sensitive_hits[:50]:
             print(f'  - {item}')
         if len(sensitive_hits) > 50:
-            print(f'  ... 其余 {len(sensitive_hits) - 50} 项未展开')
+            print(f'  ... remaining {len(sensitive_hits) - 50} items omitted')
     else:
-        print('  OK：未发现 data.db、session_profiles/、logs/、debug_screens/ 被跟踪')
+        print('  OK: data.db, session_profiles/, logs/, and debug_screens/ are not tracked')
 else:
     if sensitive_hits:
-        print('  提示：当前目录存在本地运行数据；只要保持忽略，不会随 Git 上传。')
-        print(f'  共发现 {len(sensitive_hits)} 个本地运行文件，已跳过逐项展开。')
+        print('  Note: local runtime data exists in this directory; as long as it remains ignored, it will not be committed.')
+        print(f'  Found {len(sensitive_hits)} local runtime files; detailed listing was skipped.')
     else:
-        print('  OK：当前目录未发现 data.db、session_profiles/、logs/、debug_screens/')
+        print('  OK: no local data.db, session_profiles/, logs/, or debug_screens/ entries were found here')
 
-print('2/3 检查 .gitignore 是否覆盖关键运行目录')
+print('2/3 Check that .gitignore covers the key runtime directories')
 ignore_expect = ['data.db', 'logs/', 'session_profiles/', 'debug_screens/']
 missing_ignore = []
 try:
@@ -85,13 +85,13 @@ for item in ignore_expect:
     if item not in gitignore_text:
         missing_ignore.append(item)
 if missing_ignore:
-    print('缺少建议的 .gitignore 项：')
+    print('Missing recommended .gitignore entries:')
     for item in missing_ignore:
         print(f'  - {item}')
 else:
-    print('  OK：.gitignore 已覆盖关键运行目录')
+    print('  OK: .gitignore already covers the key runtime directories')
 
-print(f'3/3 扫描{scan_mode_label}中的疑似真实 webhook')
+print(f'3/3 Scan {scan_mode_label} for suspicious real webhook URLs')
 patterns = [
     ('Feishu', re.compile(r'https://open\.feishu\.cn/open-apis/bot/v2/hook/[A-Za-z0-9_-]{20,}')),
     ('WeCom', re.compile(r'https://qyapi\.weixin\.qq\.com/cgi-bin/webhook/send\?key=[A-Za-z0-9_-]{16,}')),
@@ -122,27 +122,27 @@ for rel_path in scan_files:
             webhook_hits.append((rel_path, source, value))
 
 if webhook_hits:
-    print('发现疑似真实 webhook，请确认不要提交：')
+    print('Found suspicious real webhook URLs. Please confirm they are not committed:')
     for rel_path, source, value in webhook_hits[:20]:
         masked = value[:48] + '...' if len(value) > 48 else value
         print(f'  - [{source}] {rel_path}: {masked}')
     if len(webhook_hits) > 20:
-        print(f'  ... 其余 {len(webhook_hits) - 20} 项未展开')
+        print(f'  ... remaining {len(webhook_hits) - 20} items omitted')
 else:
-    print('  OK：未发现疑似真实 webhook')
+    print('  OK: no suspicious real webhook URLs were found')
 
 issues = bool(missing_ignore or webhook_hits or (inside_git and sensitive_hits))
 print('')
 if inside_git:
     if issues:
-        print('结果：未通过，请先清理后再上传到 GitHub。')
-        print('建议：执行 `git status`、`git diff --cached`，确认没有把本地运行数据或真实 webhook 带进去。')
+        print('Result: failed. Please clean up the repository before publishing to GitHub.')
+        print('Recommendation: run `git status` and `git diff --cached` to confirm that local runtime data and real webhooks are not included.')
         sys.exit(1)
-    print('结果：通过，可以继续执行 `git status` / `git add` / `git commit`。')
+    print('Result: passed. You can continue with `git status`, `git add`, and `git commit`.')
 else:
     if issues:
-        print('结果：预检未通过。当前还不是 Git 仓库，但源码或忽略规则里仍有风险。')
-        print('建议：先修复，再 `git init` / `git add`。')
+        print('Result: preview check failed. This is not a Git repository yet, but there are still source or ignore-rule risks to resolve.')
+        print('Recommendation: fix the issues first, then run `git init` and `git add`.')
         sys.exit(1)
-    print('结果：预检通过。当前还不是 Git 仓库；后续初始化 Git 后可再次运行本脚本做正式检查。')
+    print('Result: preview check passed. This is not a Git repository yet; run this script again after Git is initialized for the final check.')
 PY

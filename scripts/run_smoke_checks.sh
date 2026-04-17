@@ -8,12 +8,12 @@ PYTHON_BIN="${PYTHON_BIN:-$(command -v python3 || true)}"
 cd "$APP_DIR"
 
 if [[ -z "$PYTHON_BIN" || ! -x "$PYTHON_BIN" ]]; then
-  echo '未找到可用 Python，请先安装 Python 3。'
+  echo 'No usable Python interpreter found. Please install Python 3 first.'
   exit 1
 fi
 
 echo ''
-echo '==> Playwright 初始化与浏览器冒烟检查'
+echo '==> Playwright initialization and browser smoke check'
 "$PYTHON_BIN" - <<'PY'
 from hotel_price_alert.legacy_app import resolve_chromium_executable
 from playwright.sync_api import sync_playwright

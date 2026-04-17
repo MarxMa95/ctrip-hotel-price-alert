@@ -10,19 +10,19 @@ APP_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
 CHECK_SCRIPT="$APP_DIR/scripts/run_core_checks.sh"
 
 cd "$APP_DIR" || {
-  echo "无法进入项目目录：$APP_DIR"
-  read '?按回车键关闭...'
+  echo "Unable to enter project directory: $APP_DIR"
+  read '?Press Enter to close...'
   exit 1
 }
 
 if ! "$CHECK_SCRIPT"; then
   code=$?
   echo ''
-  echo "核心回归失败，退出码：$code"
-  read '?按回车键关闭...'
+  echo "Core checks failed with exit code: $code"
+  read '?Press Enter to close...'
   exit $code
 fi
 
 echo ''
-echo '核心回归已通过。'
-read '?按回车键关闭...'
+echo 'Core checks passed.'
+read '?Press Enter to close...'

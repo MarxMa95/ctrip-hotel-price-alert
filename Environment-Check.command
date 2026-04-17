@@ -11,14 +11,14 @@ PYTHON_BIN="${PYTHON_BIN:-$(command -v python3 || true)}"
 DOCTOR_SCRIPT="$APP_DIR/scripts/doctor.py"
 
 cd "$APP_DIR" || {
-  echo "无法进入项目目录：$APP_DIR"
-  read '?按回车键关闭...'
+  echo "Unable to enter project directory: $APP_DIR"
+  read '?Press Enter to close...'
   exit 1
 }
 
 if [[ -z "$PYTHON_BIN" || ! -x "$PYTHON_BIN" ]]; then
-  echo '未找到可用 Python，请先安装 Python 3。'
-  read '?按回车键关闭...'
+  echo 'No usable Python interpreter found. Please install Python 3 first.'
+  read '?Press Enter to close...'
   exit 1
 fi
 
@@ -26,9 +26,9 @@ fi
 code=$?
 echo ''
 if [[ $code -eq 0 ]]; then
-  echo '环境自检通过。'
+  echo 'Environment check passed.'
 else
-  echo "环境自检失败，退出码：$code"
+  echo "Environment check failed with exit code: $code"
 fi
-read '?按回车键关闭...'
+read '?Press Enter to close...'
 exit $code

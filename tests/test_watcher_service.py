@@ -7,8 +7,8 @@ from hotel_price_alert.services import watchers as watcher_service
 class WatcherServiceTests(unittest.TestCase):
     def test_normalize_watcher_payload(self):
         payload = watcher_service.normalize_watcher_payload({
-            'name': '任务',
-            'hotel_name': '酒店',
+            'name': 'Task',
+            'hotel_name': 'Hotel',
             'source_type': 'ctrip',
             'target_url': 'https://example.com',
             'notify_target': 'https://open.feishu.cn/test',
