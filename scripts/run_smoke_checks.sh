@@ -8,7 +8,7 @@ PYTHON_BIN="${PYTHON_BIN:-$(command -v python3 || true)}"
 cd "$APP_DIR"
 
 if [[ -z "$PYTHON_BIN" || ! -x "$PYTHON_BIN" ]]; then
-  echo 'No usable Python interpreter found. Please install Python 3 first.'
+  echo 'Python 3 was not found. Please install Python 3 first.'
   exit 1
 fi
 

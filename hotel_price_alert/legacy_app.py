@@ -112,7 +112,7 @@ SOURCE_LABELS = {
 }
 
 SOURCE_TIPS = {
-    'ctrip': 'Copy a hotel detail URL from Ctrip after you have selected your dates and room type.',
+    'ctrip': 'It is best to copy a hotel detail URL from Ctrip after you have already selected the stay dates and room type.',
 }
 
 INDEX_HTML = TEMPLATE_PATH.read_text(encoding='utf-8') if TEMPLATE_PATH.exists() else ''
@@ -153,7 +153,7 @@ def resolve_chromium_executable(playwright: Any = None, prefer_system: bool = Fa
     candidates = _iter_browser_candidates(prefer_system=prefer_system)
     if candidates:
         return str(candidates[0])
-    raise FileNotFoundError(f'No usable Chromium or system Chrome executable was found. Checked under: {PLAYWRIGHT_CACHE_DIR}')
+    raise FileNotFoundError(f'No usable Chromium or system Chrome executable was found. Checked: {PLAYWRIGHT_CACHE_DIR}')
 
 
 def cleanup_persistent_profile_locks(profile_dir: Path) -> None:
@@ -330,34 +330,6 @@ def find_watcher(watcher_id: int) -> Optional[Watcher]:
     return None
 
 
-def list_history(watcher_id: int, limit: int = PRICE_HISTORY_LIMIT) -> List[Dict[str, Any]]:
-    with db_connection() as conn:
-        rows = conn.execute(
-            'SELECT price, checked_at FROM price_history WHERE watcher_id = ? ORDER BY id DESC LIMIT ?',
-            (watcher_id, limit),
-        ).fetchall()
-    items = [{'price': row['price'], 'checked_at': row['checked_at']} for row in reversed(rows)]
-    return items
-
-
-def append_price_history(watcher_id: int, price: float, checked_at: str) -> None:
-    with db_connection() as conn:
-        conn.execute(
-            'INSERT INTO price_history (watcher_id, price, checked_at) VALUES (?, ?, ?)',
-            (watcher_id, price, checked_at),
-        )
-        conn.execute(
-            '''
-            DELETE FROM price_history
-            WHERE watcher_id = ? AND id NOT IN (
-                SELECT id FROM price_history WHERE watcher_id = ? ORDER BY id DESC LIMIT ?
-            )
-            ''',
-            (watcher_id, watcher_id, PRICE_HISTORY_LIMIT),
-        )
-        conn.commit()
-
-
 def source_default_headers(source_type: str) -> Dict[str, str]:
     headers = {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X) AppleWebKit/537.36 HotelPriceAlert/1.0 Safari/537.36',
@@ -490,24 +462,6 @@ def delete_watcher(watcher_id: int) -> None:
         conn.execute('DELETE FROM price_history WHERE watcher_id = ?', (watcher_id,))
         conn.execute('DELETE FROM watchers WHERE id = ?', (watcher_id,))
         conn.commit()
-
-
-def update_check_result(watcher_id: int, price: Optional[float], should_notify: bool, error: Optional[str] = None, price_note: Optional[str] = None) -> None:
-    now = utc_now()
-    with db_connection() as conn:
-        if should_notify and price is not None:
-            conn.execute(
-                'UPDATE watchers SET last_price = ?, last_checked_at = ?, last_notified_price = ?, last_error = ?, last_price_note = ?, updated_at = ? WHERE id = ?',
-                (price, now, price, error, price_note, now, watcher_id),
-            )
-        else:
-            conn.execute(
-                'UPDATE watchers SET last_price = ?, last_checked_at = ?, last_error = ?, last_price_note = ?, updated_at = ? WHERE id = ?',
-                (price, now, error, price_note, now, watcher_id),
-            )
-        conn.commit()
-    if price is not None and error is None:
-        append_price_history(watcher_id, price, now)
 
 
 def fetch_text(url: str, headers: Dict[str, str]) -> str:
@@ -912,7 +866,7 @@ def resolve_login_browser_executable() -> str:
     for candidate in SYSTEM_BROWSER_CANDIDATES:
         if candidate.exists():
             return str(candidate)
-    raise FileNotFoundError('No supported system browser was found for sign-in. Please install Google Chrome and try again.')
+    raise FileNotFoundError('No supported system browser was found for login. Install Google Chrome and try again.')
 
 
 def ensure_app_session_profile_dir(source_type: str) -> Path:
@@ -960,20 +914,20 @@ def save_app_session_cookie_snapshot(source_type: str, cookies: List[Dict[str, A
 def export_app_session_cookies_via_cdp(source_type: str) -> Dict[str, Any]:
     debug_port = int(APP_SESSION_DEBUG_PORTS.get(source_type) or 0)
     if debug_port <= 0 or not can_connect_app_session_debug_port(source_type):
-        return {'ok': False, 'cookie_count': 0, 'message': 'No reachable debug port was detected for the dedicated browser'}
+        return {'ok': False, 'cookie_count': 0, 'message': 'No reachable debug port was found for the dedicated browser session'}
     playwright = sync_playwright().start()
     try:
         browser = playwright.chromium.connect_over_cdp(f'http://127.0.0.1:{debug_port}')
         contexts = browser.contexts
         if not contexts:
-            return {'ok': False, 'cookie_count': 0, 'message': 'Connected to the dedicated browser, but no usable context was found'}
+            return {'ok': False, 'cookie_count': 0, 'message': 'Connected to the dedicated browser, but no usable browser context was available'}
         cookies = contexts[0].cookies()
         cookie_count = save_app_session_cookie_snapshot(source_type, cookies)
         return {
             'ok': cookie_count > 0,
             'cookie_count': cookie_count,
             'path': str(app_session_cookie_snapshot_path(source_type)),
-            'message': f'Exported {cookie_count} cookies into the session snapshot' if cookie_count > 0 else 'No valid cookie snapshot was exported',
+            'message': f'Exported {cookie_count} cookie snapshot entries' if cookie_count > 0 else 'No valid cookie snapshot could be exported',
         }
     finally:
         playwright.stop()
@@ -1079,7 +1033,7 @@ def launch_login_and_save_session(source_type: str, target_url: str) -> Dict[str
             return {
                 'ok': True,
                 'already_running': True,
-                'message': f'{label} sign-in window is already open. Finish signing in in the browser, then click “I have finished signing in”.',
+                'message': f'The {label} login window is already open. Complete the login there, then click “I Finished Login”.',
                 'profile_dir': str(profile_dir),
             }
         stop_event = threading.Event()
@@ -1097,10 +1051,10 @@ def launch_login_and_save_session(source_type: str, target_url: str) -> Dict[str
             break
 
     state = app_session_profile_status(source_type)
-    reset_hint = f" Backed up the previous profile directory to: {state.get('reset_backup_dir')}" if state.get('reset_backup_dir') else ''
+    reset_hint = f" A backup of the old profile directory was created at: {state.get('reset_backup_dir')}" if state.get('reset_backup_dir') else ''
     return {
         'ok': True,
-        'message': f'Opened the {label} sign-in window. Finish signing in in the browser, then return here and click “I have finished signing in”.{reset_hint}',
+        'message': f'Opened the {label} login window. Complete the login in the browser, then come back and click “I Finished Login”.{reset_hint}',
         'profile_dir': str(profile_dir),
         'status': state,
     }
@@ -1121,15 +1075,15 @@ def finish_login_and_save_session(source_type: str) -> Dict[str, Any]:
     snapshot_result = {'ok': False, 'cookie_count': 0, 'message': ''}
     if saved_ok and source_type == 'ctrip':
         snapshot_result = export_app_session_cookies_via_cdp(source_type)
-    snapshot_hint = f" Synced backend snapshot with {snapshot_result.get('cookie_count', 0)} entries. " if snapshot_result.get('ok') else ''
+    snapshot_hint = f" Synced {snapshot_result.get('cookie_count', 0)} cookie snapshot entries for background use." if snapshot_result.get('ok') else ''
     success_message = (
-        f'{label} session has been saved. Verification and checks will now prefer the backend cookie snapshot instead of the foreground sign-in window.'
-        f'{snapshot_hint}You can close the dedicated Ctrip window now. Future verification, manual checks, and automatic monitoring will run in the background.'
-        'If the session expires later, open the dedicated sign-in window again, sign in once more, and click “I have finished signing in”.'
+        f'The {label} session has been saved. Future verification and checks will prefer the background cookie snapshot instead of relying on the foreground login window.'
+        f'{snapshot_hint} You can now close the dedicated Ctrip login window. Future “Verify Session”, “Check Now”, and automatic monitoring runs will use the background session.'
+        ' If the session expires later, reopen the dedicated window, sign in again, and click “I Finished Login”.'
     )
     return {
         'ok': saved_ok,
-        'message': (success_message if saved_ok else 'No valid sign-in cookie was found in the dedicated Ctrip profile yet. Please confirm that sign-in was completed successfully in the browser, then click “I have finished signing in” again.'),
+        'message': (success_message if saved_ok else 'No valid login cookie was detected in the dedicated Ctrip profile yet. Make sure you really completed sign-in in the opened browser window, then click “I Finished Login” again.'),
         'profile_dir': str(ensure_app_session_profile_dir(source_type)),
         'status': state,
         'snapshot': snapshot_result,
@@ -1198,14 +1152,14 @@ def startup_session_check(source_type: str = 'ctrip') -> Dict[str, Any]:
         return {
             'ok': False,
             'needs_login': True,
-            'message': f'{session_login_label(source_type)} dedicated sign-in window is still open. Please finish signing in before continuing.',
+            'message': f'The dedicated {session_login_label(source_type)} login window is still open. Finish the login first, then continue.',
             'status': status,
         }
     if not status.get('exists'):
         return {
             'ok': False,
             'needs_login': True,
-            'message': f'No {session_login_label(source_type)} dedicated session has been saved yet. Please sign in and save a session from the page first.',
+            'message': f'No dedicated {session_login_label(source_type)} session has been saved yet. Sign in and save the session first.',
             'status': status,
             'target_url': recent_target_url(source_type),
         }
@@ -1213,7 +1167,7 @@ def startup_session_check(source_type: str = 'ctrip') -> Dict[str, Any]:
         return {
             'ok': False,
             'needs_login': True,
-            'message': 'The dedicated Ctrip session does not contain a valid sign-in cookie yet. Click “Sign in to Ctrip and save session” and complete sign-in again.',
+            'message': 'The dedicated Ctrip session does not contain a valid login cookie yet. Start the login flow again and complete sign-in.',
             'status': status,
             'target_url': recent_target_url(source_type),
         }
@@ -1225,7 +1179,7 @@ def startup_session_check(source_type: str = 'ctrip') -> Dict[str, Any]:
         return {
             'ok': bool(result.get('ok')),
             'needs_login': not bool(result.get('ok')),
-            'message': f'{session_login_label(source_type)} dedicated session verification passed' if result.get('ok') else f'{session_login_label(source_type)} dedicated session has expired. Please sign in again.',
+            'message': f'{session_login_label(source_type)} dedicated session verified successfully' if result.get('ok') else f'The dedicated {session_login_label(source_type)} session has expired. Please sign in again.',
             'target_url': target_url,
             'page_debug': result.get('page_debug'),
             'status': status,
@@ -1234,7 +1188,7 @@ def startup_session_check(source_type: str = 'ctrip') -> Dict[str, Any]:
         payload = {
             'ok': False,
             'needs_login': True,
-            'message': f'{session_login_label(source_type)} dedicated session verification failed: {exc}',
+            'message': f'Failed to verify the dedicated {session_login_label(source_type)} session: {exc}',
             'target_url': target_url,
             'status': status,
         }
@@ -1249,7 +1203,7 @@ def startup_all_session_checks() -> Dict[str, Any]:
     return {
         'ok': bool(result.get('ok')),
         'items': {'ctrip': result},
-        'message': 'Ctrip: ready' if result.get('ok') else 'Ctrip: sign-in or re-verification required',
+        'message': 'Ctrip: available' if result.get('ok') else 'Ctrip: login or re-verification required',
         'source_type': 'ctrip',
     }
 
@@ -1267,7 +1221,7 @@ def verify_app_session(target_url: str, headers: Dict[str, str], source_type: st
     label = session_login_label(source_type)
     return {
         'ok': ok,
-        'message': 'Dedicated session is ready' if ok else f'The dedicated session still lands on the {label} sign-in page. Please sign in again and retry',
+        'message': 'Dedicated session is available' if ok else f'The dedicated session still falls back to the {label} login page. Sign in again and retry.',
         'page_debug': page_debug,
     }
 
@@ -1276,7 +1230,7 @@ def _open_app_session_page(url: str, headers: Dict[str, str], source_type: str, 
     with APP_SESSION_LOGIN_LOCK:
         thread = APP_SESSION_LOGIN_THREADS.get(source_type)
         if thread and thread.is_alive():
-            raise RuntimeError(f'{session_login_label(source_type)}sign-in window is still open. Click “I have finished signing in” first so the session can be saved before continuing.')
+            raise RuntimeError(f'The {session_login_label(source_type)} login window is still open. Click “I Finished Login” first to save the session before identifying room content.')
     playwright = sync_playwright().start()
     browser = None
     context = None
@@ -1286,7 +1240,7 @@ def _open_app_session_page(url: str, headers: Dict[str, str], source_type: str, 
             export_app_session_cookies_via_cdp(source_type)
             cookies = load_app_session_cookie_snapshot(source_type)
         if not cookies:
-            raise RuntimeError(f'{session_login_label(source_type)} backend cookie snapshot is unavailable. Please click “Sign in to Ctrip and save session”, finish signing in, and then click “I have finished signing in” again.')
+            raise RuntimeError(f'The background cookie snapshot for {session_login_label(source_type)} is unavailable. Start the login flow, complete sign-in, then click “I Finished Login” again.')
         executable_path = resolve_chromium_executable(playwright, prefer_system=False)
         browser = playwright.chromium.launch(
             executable_path=executable_path,
@@ -1687,7 +1641,7 @@ def extract_price(text: str, patterns: List[str]) -> float:
     fallback = plausible_price_from_text(text)
     if fallback is not None:
         return fallback
-    raise ValueError('No price was found. Usually this means the page requires sign-in/cookies, or the site structure has changed.')
+    raise ValueError('No price could be extracted. The page may require a valid session/cookie, or the page structure may have changed.')
 
 
 def matched_room_blocks(text: str, watcher: Watcher) -> List[Dict[str, Any]]:
@@ -1698,7 +1652,6 @@ def matched_room_blocks(text: str, watcher: Watcher) -> List[Dict[str, Any]]:
     if not block_items:
         return []
 
-    variants = [item.lower() for item in keyword_variants(keyword)]
     preferred_tags = [item.strip().lower() for item in watcher.meta_tags() if item.strip()]
     matched: List[Dict[str, Any]] = []
     for item in block_items:
@@ -1706,19 +1659,20 @@ def matched_room_blocks(text: str, watcher: Watcher) -> List[Dict[str, Any]]:
             str(item.get('room_name', '')),
             str(item.get('raw_text', '')),
             ' '.join(item.get('tags', [])),
-        ]).lower()
-        if not any(variant in haystack for variant in variants):
+        ])
+        if not room_keyword_matches(haystack, keyword):
             continue
         score = 0
-        room_name = str(item.get('room_name', '')).lower()
-        raw_text = str(item.get('raw_text', '')).lower()
-        if keyword.lower() in room_name:
+        room_name = compact_room_text(str(item.get('room_name', '')))
+        raw_text = compact_room_text(str(item.get('raw_text', '')))
+        keyword_text = compact_room_text(keyword)
+        explicit_parts = explicit_room_keyword_parts(keyword)
+        if keyword_text in room_name:
             score += 8
-        if keyword.lower() in raw_text:
+        if keyword_text in raw_text:
             score += 5
-        for variant in variants[:8]:
-            if variant in room_name:
-                score += min(len(variant), 6)
+        if explicit_parts and len(explicit_parts) >= 2 and all(part in room_name for part in explicit_parts):
+            score += 6
         tags = [str(tag).strip().lower() for tag in item.get('tags', []) if str(tag).strip()]
         if preferred_tags:
             for preferred in preferred_tags:
@@ -1767,6 +1721,36 @@ def keyword_variants(keyword: str) -> List[str]:
     return ordered
 
 
+def compact_room_text(value: str) -> str:
+    return re.sub(r'\s+', '', normalize_room_name(value)).lower()
+
+
+def explicit_room_keyword_parts(keyword: str) -> List[str]:
+    parts: List[str] = []
+    for part in re.split(r'[\s/|（）()\-]+', keyword or ''):
+        compact = compact_room_text(part)
+        if len(compact) >= 2:
+            parts.append(compact)
+    ordered: List[str] = []
+    seen = set()
+    for item in parts:
+        if item not in seen:
+            seen.add(item)
+            ordered.append(item)
+    return ordered
+
+
+def room_keyword_matches(haystack: str, keyword: str) -> bool:
+    haystack_text = compact_room_text(haystack)
+    keyword_text = compact_room_text(keyword)
+    if not keyword_text or not haystack_text:
+        return False
+    if keyword_text in haystack_text:
+        return True
+    explicit_parts = explicit_room_keyword_parts(keyword)
+    return bool(explicit_parts) and len(explicit_parts) >= 2 and all(part in haystack_text for part in explicit_parts)
+
+
 def room_scoped_texts(text: str, room_keyword: str, watcher: Optional[Watcher] = None) -> List[str]:
     keyword = room_keyword.strip()
     if not keyword:
@@ -1775,16 +1759,15 @@ def room_scoped_texts(text: str, room_keyword: str, watcher: Optional[Watcher] =
     block_items = parse_room_blocks(text)
     if block_items:
         matched_blocks = []
-        variants = [item.lower() for item in keyword_variants(keyword)]
         for item in block_items:
-            haystack = ' '.join([item.get('room_name', ''), item.get('raw_text', ''), ' '.join(item.get('tags', []))]).lower()
-            if any(variant.lower() in haystack for variant in variants):
+            haystack = ' '.join([item.get('room_name', ''), item.get('raw_text', ''), ' '.join(item.get('tags', []))])
+            if room_keyword_matches(haystack, keyword):
                 matched_blocks.append(item.get('raw_text', ''))
         if matched_blocks:
             return matched_blocks
 
     snippets: List[str] = []
-    patterns = [re.escape(item) for item in keyword_variants(keyword)]
+    patterns = [re.escape(keyword)] if keyword else []
     search_text = search_text_only(text)
 
     seen_ranges = set()
@@ -1811,29 +1794,29 @@ def room_scoped_texts(text: str, room_keyword: str, watcher: Optional[Watcher] =
     if signals.get('login_like') or ('passport.ctrip.com' in final_url and (watcher is None or watcher.source_type == 'ctrip')):
         source_label = 'Ctrip'
         error = ValueError(
-            f'The current page is not a hotel room page. It looks like the {source_label} sign-in page instead: {final_url or "(unknown URL)"}.'
-            f'Click “Sign in to {source_label} and save session”, finish signing in in the browser, return here, click “I have finished signing in”, and try again.'
+            f'The fetched page is not a hotel room page. It is the {source_label} login page instead: {final_url or "(unknown URL)"}.'
+            f' Start the dedicated {source_label} login flow, complete sign-in in the browser, click “I Finished Login”, and try again.'
         )
         setattr(error, 'debug_payload', build_room_debug_payload(text, keyword, watcher))
         raise error
     if watcher is not None and watcher.source_type == 'ctrip' and signals.get('booking_like'):
         error = ValueError(
-            f'The current page redirected to a Ctrip checkout page instead of a room page: {final_url or "(unknown URL)"}.'
-            'The workflow already tried to avoid entering checkout again. Please click “Check now” once more. If the error persists, share the diagnostics.'
+            f'The flow landed on a Ctrip booking page instead of a room page: {final_url or "(unknown URL)"}.'
+            ' Try “Check Now” again. If the error still happens, inspect the diagnostics payload.'
         )
         setattr(error, 'debug_payload', build_room_debug_payload(text, keyword, watcher))
         raise error
     if suggestions:
         error = ValueError(
-            f"The room keyword was not found: {keyword}. Tried these keyword variants: {variant_text}."
-            f"Sample room candidates found on the current page: {';'.join(suggestions)}."
-            "Suggestion: 1) try a more complete room keyword; 2) if the room is visible but still not matching, it may not have fully loaded yet."
+            f"Room keyword not found: {keyword}. Attempted keyword variants: {variant_text}. "
+            f"Example room candidates found on the page: {'; '.join(suggestions)}. "
+            "Suggestions: 1) confirm whether the room type is sold out or no longer listed; 2) if it is still available, use the full room name from the page and try again."
         )
         setattr(error, 'debug_payload', build_room_debug_payload(text, keyword, watcher))
         raise error
     error = ValueError(
-        f"The room keyword was not found: {keyword}. Tried these keyword variants: {variant_text}."
-        "No clear room candidates were found on the current page. Try scrolling the page, refreshing cookies, or using a more specific full room name."
+        f"Room keyword not found: {keyword}. Attempted keyword variants: {variant_text}. "
+        "No clear room candidates were extracted from the current page. Try scrolling the page, refreshing the session cookie, or using a more specific full room name."
     )
     setattr(error, 'debug_payload', build_room_debug_payload(text, keyword, watcher))
     raise error
@@ -1998,7 +1981,7 @@ def extract_price_for_watcher(text: str, watcher: Watcher) -> float:
             value = extract_price(snippet, patterns)
             if min_expected and value < min_expected:
                 filtered_out_prices.append(value)
-                raise ValueError(f'The detected price {value:.2f} is lower than your configured minimum reasonable price {min_expected:.2f}')
+                raise ValueError(f'The extracted price {value:.2f} is below the configured minimum reasonable price {min_expected:.2f}')
             return value
         except Exception as exc:
             last_error = exc
@@ -2006,18 +1989,18 @@ def extract_price_for_watcher(text: str, watcher: Watcher) -> float:
         if filtered_out_prices:
             samples = ' / '.join(f'{value:.2f}' for value in filtered_out_prices[:6])
             error = ValueError(
-                f'The room keyword was matched, but all detected prices are below your configured minimum reasonable price: {watcher.room_type_keyword}.'
-                f'The minimum reasonable price is {min_expected:.2f}. Candidate prices detected this time: {samples}.'
-                'You can lower the minimum reasonable price a bit, or keep refining the room matching keyword.'
+                f'The room keyword was matched, but all extracted prices are below the configured minimum reasonable price for: {watcher.room_type_keyword}. '
+                f'The minimum reasonable price is {min_expected:.2f}, and the extracted candidate prices were: {samples}. '
+                'You can lower the minimum reasonable price or further refine room matching.'
             )
             setattr(error, 'debug_payload', build_room_debug_payload(text, watcher.room_type_keyword, watcher))
             raise error from last_error
-        error = ValueError(f'The room keyword was matched, but no corresponding price was found: {watcher.room_type_keyword}')
+        error = ValueError(f'The room keyword was matched, but no corresponding price was extracted: {watcher.room_type_keyword}')
         setattr(error, 'debug_payload', build_room_debug_payload(text, watcher.room_type_keyword, watcher))
         raise error from last_error
     if last_error:
         raise last_error
-    raise ValueError('No price was found')
+    raise ValueError('No price was extracted')
 
 
 def should_notify(watcher: Watcher, current_price: float) -> bool:
@@ -2052,15 +2035,15 @@ def send_notification(watcher: Watcher, current_price: float, is_test: bool = Fa
     if watcher.room_type_keyword.strip():
         lines.append(f'Room: {watcher.room_type_keyword}')
     if watcher.room_type_meta.strip():
-        lines.append(f'Room notes: {watcher.room_type_meta}')
+        lines.append(f'Room tags: {watcher.room_type_meta}')
     lines.append(f'Current price: {watcher.currency} {current_price:.2f}')
     if watcher.last_price is not None and not is_test:
-        lines.append(f'Last price: {watcher.currency} {watcher.last_price:.2f}')
+        lines.append(f'Previous price: {watcher.currency} {watcher.last_price:.2f}')
     if watcher.threshold_price is not None:
         lines.append(f'Target price: {watcher.currency} {watcher.threshold_price:.2f}')
     if watcher.min_expected_price is not None:
         lines.append(f'Minimum reasonable price: {watcher.currency} {watcher.min_expected_price:.2f}')
-    lines.append(f'URL: {watcher.target_url}')
+    lines.append(f'Link: {watcher.target_url}')
     content = '\n'.join(lines)
     if watcher.notify_type == 'wechat':
         send_wechat_webhook(watcher.notify_target, content)

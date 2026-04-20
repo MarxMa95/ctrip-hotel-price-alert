@@ -11,7 +11,7 @@ START_SCRIPT="$SCRIPT_DIR/start.sh"
 PYTHON_PATH="$(dirname "$(command -v python3)"):/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
 mkdir -p "$HOME/Library/LaunchAgents" "$LOG_DIR" || {
-  echo 'Failed to create the LaunchAgents or log directory'
+  echo 'Failed to create LaunchAgents or log directories.'
   exit 1
 }
 

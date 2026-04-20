@@ -4,9 +4,13 @@ from typing import Any, Dict, Tuple
 
 from ..config import APP_BUILD_VERSION, DEFAULT_CHROME_PROFILE, DEFAULT_POLL_INTERVAL_MINUTES, POLL_INTERVAL_SECONDS, PRICE_HISTORY_LIMIT, SOURCE_TIPS
 from ..notifications import send_notification
-from ..repository import Watcher, create_watcher, find_watcher, list_history, list_watchers, update_watcher
+from ..repository import Watcher, count_notification_events_today, create_watcher, find_watcher, list_history, list_notification_events, list_watchers, update_watcher
 from ..services.checker import check_watcher
 from ..utils import utc_now, watcher_next_run_display
+
+
+def is_room_missing_error(message: Any) -> bool:
+    return str(message or '').startswith('Room keyword not found')
 
 
 def list_watcher_items() -> Dict[str, Any]:
@@ -17,9 +21,14 @@ def list_watcher_items() -> Dict[str, Any]:
         item['tip'] = SOURCE_TIPS.get('ctrip', '')
         item['room_type_tags'] = watcher.meta_tags()
         item['history'] = list_history(watcher.id, PRICE_HISTORY_LIMIT)
+        item['history_all'] = list_history(watcher.id, None)
+        item['notification_events'] = list_notification_events(watcher.id, None)
+        item['notifications_today'] = count_notification_events_today(watcher.id)
         item['next_check_at'] = watcher_next_run_display(watcher)
         item['all_time_low_price'] = watcher.all_time_low_price
         item['all_time_low_at'] = watcher.all_time_low_at
+        item['current_price_available'] = not is_room_missing_error(watcher.last_error)
+        item['last_valid_price'] = watcher.last_price
         items.append(item)
     return {
         'items': items,
@@ -41,6 +50,13 @@ def normalize_watcher_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
     normalized['threshold_price'] = None if threshold in ('', None) else float(threshold)
     min_expected = normalized.get('min_expected_price')
     normalized['min_expected_price'] = None if min_expected in ('', None) else float(min_expected)
+    normalized['quiet_hours_start'] = str(normalized.get('quiet_hours_start', '')).strip()
+    normalized['quiet_hours_end'] = str(normalized.get('quiet_hours_end', '')).strip()
+    daily_limit = normalized.get('daily_notification_limit')
+    normalized['daily_notification_limit'] = max(0, int(daily_limit or 0))
+    normalized['notify_only_target_hit'] = str(normalized.get('notify_only_target_hit', '')).strip() in ('1', 'true', 'True', 'on')
+    min_drop = normalized.get('min_price_drop_amount')
+    normalized['min_price_drop_amount'] = None if min_drop in ('', None) else max(0.0, float(min_drop))
     interval_minutes = normalized.get('poll_interval_minutes')
     normalized['poll_interval_minutes'] = max(1, int(interval_minutes or DEFAULT_POLL_INTERVAL_MINUTES))
     normalized['notify_type'] = (normalized.get('notify_type') or 'feishu').strip() or 'feishu'
@@ -76,18 +92,23 @@ def run_check_now(watcher_id: int) -> Tuple[Dict[str, Any], int]:
 def build_test_notification_watcher(webhook: str, notify_type: str = 'feishu') -> Watcher:
     return Watcher(
         id=0,
-        name='Test Alert',
-        hotel_name='Test Hotel',
+        name='Test alert',
+        hotel_name='Test hotel',
         source_type='ctrip',
         target_url='https://example.com',
         room_type_keyword='Deluxe King Room',
-        room_type_meta='Breakfast included | Free cancellation',
+        room_type_meta='Breakfast Included | Free Cancellation',
         price_pattern='',
         currency='CNY',
         notify_type=notify_type or 'feishu',
         notify_target=webhook,
         threshold_price=999.0,
         min_expected_price=None,
+        quiet_hours_start='',
+        quiet_hours_end='',
+        daily_notification_limit=0,
+        notify_only_target_hit=0,
+        min_price_drop_amount=None,
         poll_interval_minutes=DEFAULT_POLL_INTERVAL_MINUTES,
         request_headers='{}',
         use_local_chrome_profile=0,

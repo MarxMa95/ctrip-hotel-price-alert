@@ -127,13 +127,13 @@ class AppHandler(BaseHTTPRequestHandler):
         required = ['name', 'hotel_name', 'source_type', 'target_url', 'notify_target']
         missing = validate_required_fields(payload, required)
         if missing:
-            self._send_json({'error': f'Missing required fields: {", ".join(missing)}'}, HTTPStatus.BAD_REQUEST)
+            self._send_json({'error': f'Missing fields: {", ".join(missing)}'}, HTTPStatus.BAD_REQUEST)
             return
         try:
             watcher_id = create_watcher_from_payload(payload)
             self._send_json({'ok': True, 'id': watcher_id}, HTTPStatus.CREATED)
         except json.JSONDecodeError:
-            self._send_json({'error': 'Advanced request headers must be valid JSON'}, HTTPStatus.BAD_REQUEST)
+            self._send_json({'error': 'Request headers in advanced settings must be valid JSON'}, HTTPStatus.BAD_REQUEST)
         except Exception as exc:
             self._send_json({'error': str(exc)}, HTTPStatus.BAD_REQUEST)
 
@@ -141,13 +141,13 @@ class AppHandler(BaseHTTPRequestHandler):
         required = ['id', 'name', 'hotel_name', 'source_type', 'target_url', 'notify_target']
         missing = validate_required_fields(payload, required)
         if missing:
-            self._send_json({'error': f'Missing required fields: {", ".join(missing)}'}, HTTPStatus.BAD_REQUEST)
+            self._send_json({'error': f'Missing fields: {", ".join(missing)}'}, HTTPStatus.BAD_REQUEST)
             return
         try:
             update_watcher_from_payload(payload)
             self._send_json({'ok': True})
         except json.JSONDecodeError:
-            self._send_json({'error': 'Advanced request headers must be valid JSON'}, HTTPStatus.BAD_REQUEST)
+            self._send_json({'error': 'Request headers in advanced settings must be valid JSON'}, HTTPStatus.BAD_REQUEST)
         except Exception as exc:
             self._send_json({'error': str(exc)}, HTTPStatus.BAD_REQUEST)
 
@@ -159,22 +159,22 @@ class AppHandler(BaseHTTPRequestHandler):
         webhook = str(payload.get('notify_target', '')).strip()
         notify_type = str(payload.get('notify_type', 'feishu')).strip() or 'feishu'
         if not webhook:
-            self._send_json({'error': 'Please enter a notification webhook first'}, HTTPStatus.BAD_REQUEST)
+            self._send_json({'error': 'Please provide a notification target or bot configuration first'}, HTTPStatus.BAD_REQUEST)
             return
         try:
             send_test_notification(webhook, notify_type=notify_type)
             self._send_json({'ok': True})
         except ssl.SSLCertVerificationError:
-            self._send_json({'error': 'Python certificate verification failed on this machine. Please restart the service with the stable launcher and try again.'}, HTTPStatus.BAD_REQUEST)
+            self._send_json({'error': 'Local Python certificate validation failed. Restart the service with the stable launcher and try again.'}, HTTPStatus.BAD_REQUEST)
         except Exception as exc:
-            self._send_json({'error': f'Failed to send the test notification: {exc}'}, HTTPStatus.BAD_REQUEST)
+            self._send_json({'error': f'Test notification failed: {exc}'}, HTTPStatus.BAD_REQUEST)
 
     def _handle_verify_app_session(self, payload: Dict[str, Any]) -> None:
         try:
             result, status = verify_session_payload(payload)
             self._send_json(result, status)
         except json.JSONDecodeError:
-            self._send_json({'error': 'Advanced request headers must be valid JSON'}, HTTPStatus.BAD_REQUEST)
+            self._send_json({'error': 'Request headers in advanced settings must be valid JSON'}, HTTPStatus.BAD_REQUEST)
         except Exception as exc:
             response_payload = {'error': str(exc)}
             debug_payload = getattr(exc, 'debug_payload', None)
@@ -186,7 +186,7 @@ class AppHandler(BaseHTTPRequestHandler):
         try:
             self._send_json(debug_session_screenshot_payload(payload))
         except json.JSONDecodeError:
-            self._send_json({'error': 'Advanced request headers must be valid JSON'}, HTTPStatus.BAD_REQUEST)
+            self._send_json({'error': 'Request headers in advanced settings must be valid JSON'}, HTTPStatus.BAD_REQUEST)
         except Exception as exc:
             self._send_json({'error': str(exc)}, HTTPStatus.BAD_REQUEST)
 

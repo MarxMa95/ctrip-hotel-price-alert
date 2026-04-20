@@ -8,7 +8,7 @@ PYTHON_BIN="${PYTHON_BIN:-$(command -v python3 || true)}"
 cd "$APP_DIR"
 
 if [[ -z "$PYTHON_BIN" || ! -x "$PYTHON_BIN" ]]; then
-  echo 'No usable python3 interpreter was found. Cannot run the pre-publish check.'
+  echo 'python3 was not found. Unable to run the pre-publish check.'
   exit 1
 fi
 
@@ -26,9 +26,9 @@ inside_git = subprocess.run(
     text=True,
 ).returncode == 0
 
-print('==> Starting pre-publish check')
+print('==> Pre-publish check started')
 print(f'Working directory: {repo}')
-print(f"Git repository: {'yes' if inside_git else 'no'}")
+print(f"Inside Git repo: {'yes' if inside_git else 'no'}")
 
 if inside_git:
     tracked = subprocess.run(
@@ -52,7 +52,7 @@ else:
 
 sensitive_prefixes = ('logs/', 'session_profiles/', 'debug_screens/')
 
-print('1/3 Check sensitive runtime data')
+print('1/3 Checking sensitive runtime data')
 sensitive_hits = []
 for path in scan_files:
     if path == 'data.db' or path.startswith(sensitive_prefixes):
@@ -64,17 +64,17 @@ if inside_git:
         for item in sensitive_hits[:50]:
             print(f'  - {item}')
         if len(sensitive_hits) > 50:
-            print(f'  ... remaining {len(sensitive_hits) - 50} items omitted')
+            print(f'  ... plus {len(sensitive_hits) - 50} more items')
     else:
         print('  OK: data.db, session_profiles/, logs/, and debug_screens/ are not tracked')
 else:
     if sensitive_hits:
-        print('  Note: local runtime data exists in this directory; as long as it remains ignored, it will not be committed.')
-        print(f'  Found {len(sensitive_hits)} local runtime files; detailed listing was skipped.')
+        print('  Note: local runtime data exists in this directory; it is fine as long as it stays ignored.')
+        print(f'  Found {len(sensitive_hits)} local runtime entries and skipped printing them individually.')
     else:
-        print('  OK: no local data.db, session_profiles/, logs/, or debug_screens/ entries were found here')
+        print('  OK: no local runtime data found in the current directory')
 
-print('2/3 Check that .gitignore covers the key runtime directories')
+print('2/3 Checking whether .gitignore covers key runtime paths')
 ignore_expect = ['data.db', 'logs/', 'session_profiles/', 'debug_screens/']
 missing_ignore = []
 try:
@@ -89,9 +89,9 @@ if missing_ignore:
     for item in missing_ignore:
         print(f'  - {item}')
 else:
-    print('  OK: .gitignore already covers the key runtime directories')
+    print('  OK: .gitignore covers the key runtime paths')
 
-print(f'3/3 Scan {scan_mode_label} for suspicious real webhook URLs')
+print(f'3/3 Scanning {scan_mode_label} for possible real webhook secrets')
 patterns = [
     ('Feishu', re.compile(r'https://open\.feishu\.cn/open-apis/bot/v2/hook/[A-Za-z0-9_-]{20,}')),
     ('WeCom', re.compile(r'https://qyapi\.weixin\.qq\.com/cgi-bin/webhook/send\?key=[A-Za-z0-9_-]{16,}')),
@@ -122,27 +122,27 @@ for rel_path in scan_files:
             webhook_hits.append((rel_path, source, value))
 
 if webhook_hits:
-    print('Found suspicious real webhook URLs. Please confirm they are not committed:')
+    print('Potential real webhook secrets found. Review these before committing:')
     for rel_path, source, value in webhook_hits[:20]:
         masked = value[:48] + '...' if len(value) > 48 else value
         print(f'  - [{source}] {rel_path}: {masked}')
     if len(webhook_hits) > 20:
-        print(f'  ... remaining {len(webhook_hits) - 20} items omitted')
+        print(f'  ... plus {len(webhook_hits) - 20} more items')
 else:
-    print('  OK: no suspicious real webhook URLs were found')
+    print('  OK: no likely real webhook secrets found')
 
 issues = bool(missing_ignore or webhook_hits or (inside_git and sensitive_hits))
 print('')
 if inside_git:
     if issues:
-        print('Result: failed. Please clean up the repository before publishing to GitHub.')
-        print('Recommendation: run `git status` and `git diff --cached` to confirm that local runtime data and real webhooks are not included.')
+        print('Result: failed. Clean these items before uploading to GitHub.')
+        print('Suggested next step: run `git status` and `git diff --cached` to confirm no local runtime data or real webhooks are included.')
         sys.exit(1)
     print('Result: passed. You can continue with `git status`, `git add`, and `git commit`.')
 else:
     if issues:
-        print('Result: preview check failed. This is not a Git repository yet, but there are still source or ignore-rule risks to resolve.')
-        print('Recommendation: fix the issues first, then run `git init` and `git add`.')
+        print('Result: failed. This is not a Git repo yet, but the source or ignore rules still contain risks.')
+        print('Suggested next step: fix these issues before running `git init` or `git add`.')
         sys.exit(1)
-    print('Result: preview check passed. This is not a Git repository yet; run this script again after Git is initialized for the final check.')
+    print('Result: passed. This is not a Git repo yet; run this script again after initializing Git for a final check.')
 PY

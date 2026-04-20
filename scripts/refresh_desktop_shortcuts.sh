@@ -18,10 +18,10 @@ SCRIPT
   chmod +x "$DESKTOP_DIR/$shortcut_name"
 }
 
-make_shortcut 'Start-Ctrip-Hotel-Alert.command' 'Start-Ctrip-Hotel-Alert.command'
-make_shortcut 'Run-Core-Checks.command' 'Run-Core-Checks.command'
-make_shortcut 'Environment-Check.command' 'Environment-Check.command'
-make_shortcut 'Prepublish-Check.command' 'Prepublish-Check.command'
+make_shortcut 'Launch Ctrip Hotel Alert.command' 'Launch Ctrip Hotel Alert.command'
+make_shortcut 'Run Core Checks.command' 'Run Core Checks.command'
+make_shortcut 'Environment Check.command' 'Environment Check.command'
+make_shortcut 'Pre-Publish Check.command' 'Pre-Publish Check.command'
 
 echo 'Desktop shortcuts refreshed:'
-ls -1 "$DESKTOP_DIR" | grep -E 'Start-Ctrip-Hotel-Alert|Run-Core-Checks|Environment-Check|Prepublish-Check' || true
+ls -1 "$DESKTOP_DIR" | grep -E 'Launch Ctrip Hotel Alert|Run Core Checks|Environment Check|Pre-Publish Check' || true

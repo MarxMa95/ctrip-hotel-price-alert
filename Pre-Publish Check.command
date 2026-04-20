@@ -7,7 +7,7 @@ case "$SCRIPT_PATH" in
   *) SCRIPT_PATH="$PWD/$SCRIPT_PATH" ;;
 esac
 APP_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
-CHECK_SCRIPT="$APP_DIR/scripts/run_core_checks.sh"
+CHECK_SCRIPT="$APP_DIR/scripts/prepublish_check.sh"
 
 cd "$APP_DIR" || {
   echo "Unable to enter project directory: $APP_DIR"
@@ -18,11 +18,11 @@ cd "$APP_DIR" || {
 if ! "$CHECK_SCRIPT"; then
   code=$?
   echo ''
-  echo "Core regression checks failed with exit code: $code"
+  echo "Pre-publish check failed with exit code: $code"
   read '?Press Enter to close...'
   exit $code
 fi
 
 echo ''
-echo 'Core regression checks passed.'
+echo 'Pre-publish check passed.'
 read '?Press Enter to close...'

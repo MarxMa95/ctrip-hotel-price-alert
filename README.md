@@ -5,35 +5,54 @@
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
 [![Platform](https://img.shields.io/badge/platform-macOS-lightgrey)](https://www.apple.com/macos/)
 
-Track Ctrip hotel prices at the room level, send alerts to your preferred IM webhook, and run everything locally with an out-of-the-box workflow.
+A local-first hotel price monitoring app for `Ctrip`, built for room-specific tracking, flexible IM notifications, and quick setup on your own machine.
 
-Designed for practical day-to-day monitoring, the project lets you focus on a specific room keyword, keep a full local price history, and receive notifications when prices drop or reach your target.
+## Why this project
 
-## Features
-- Track hotel prices at the room level with room keyword matching
-- Send alerts to `Feishu` or `WeCom`, with flexible webhook-based IM delivery
-- Notify on price drops, target-price hits, and all-time-low events in a clean local workflow
-- Show recent trend, all-time low, and the latest occurrence time of that low
-- Keep full price history going forward for each watcher
-- Run locally on macOS with ready-to-use launchers and maintenance scripts
+Most hotel price trackers only watch a listing at the hotel level. This project is built for the more practical case:
 
-## Screenshots / UI Summary
-Each watcher card shows:
-- current price
-- target price
-- minimum expected price
-- recent trend chart
-- all-time low price
-- latest occurrence time of that low price
-- last check time and next scheduled check
+- track a specific room type instead of the whole hotel
+- keep monitoring from your own machine and browser session
+- send alerts to the IM tool you already use
+- review recent price trend, all-time low, and latest low occurrence time
+
+## Key Features
+
+- Room-specific monitoring by room name keyword
+- Multiple notification channels:
+  - `Feishu`
+  - `WeCom`
+  - `Slack`
+  - `Discord`
+  - `Telegram`
+- Separate alert behavior for:
+  - target price reached
+  - normal price drop
+- Trend chart with:
+  - recent 7-day / 30-day / full-history view
+  - all-time low price
+  - latest timestamp when that low price appeared
+- Full local history retention for newly collected data
+- Browser-session-assisted access for pages that require a valid signed-in session
+- Local-only runtime data: watchers, logs, and session material stay on your machine
+
+## Product Positioning
+
+This project is designed to be:
+
+- `Room-aware`: track the exact room you care about
+- `IM-flexible`: use the notification provider that fits your workflow
+- `Local-first`: keep your session and runtime data on your own device
+- `Practical`: start quickly without building a cloud service
 
 ## Requirements
+
 - macOS
-- Python 3.11+
+- Python `3.11+`
 - `playwright`
 - A local Chrome / Chromium / Edge installation, or Playwright-managed Chromium
 
-Install dependencies if needed:
+Install the required browser dependency if needed:
 
 ```bash
 python3 -m pip install playwright
@@ -42,7 +61,7 @@ python3 -m playwright install chromium
 
 ## Quick Start
 
-### Start the app
+### Option 1: Run directly
 
 ```bash
 python3 app.py
@@ -54,42 +73,45 @@ Then open:
 http://127.0.0.1:8766
 ```
 
-### Or use the included launcher
+### Option 2: Use the launcher
 
-- `Start-Ctrip-Hotel-Alert.command`
+- `Launch Ctrip Hotel Alert.command`
 
 This launcher will:
-- stop the old local process if needed
-- check port conflicts
+
+- stop an older local process if needed
+- detect port conflicts
 - start the service
-- open the browser
+- open the app in your browser
 
-### Desktop shortcuts
+## Included Helper Entrypoints
 
-If you use the provided desktop shortcuts, note the difference:
-- repository root `.command` files are the real project entry scripts
-- desktop `.command` files are lightweight wrappers that jump back into the project directory
+- `Launch Ctrip Hotel Alert.command`
+- `Run Core Checks.command`
+- `Environment Check.command`
+- `Pre-Publish Check.command`
 
-Recommended desktop entries:
-- `Start-Ctrip-Hotel-Alert.command`
-- `Run-Core-Checks.command`
-- `Environment-Check.command`
+You can also refresh desktop wrappers:
+
+```bash
+./scripts/refresh_desktop_shortcuts.sh
+```
 
 ## Installation
 
-Clone the repository and run:
+Clone the repository and start the app:
 
 ```bash
 python3 app.py
 ```
 
-Optional launchd background mode on macOS:
+Optional background mode with `launchd`:
 
 ```bash
 ./scripts/install_launchd.sh
 ```
 
-Useful commands:
+Useful service commands:
 
 ```bash
 ./scripts/status_launchd.sh
@@ -99,74 +121,51 @@ Useful commands:
 ## Usage
 
 Create a watcher with these core fields:
+
 - hotel URL
 - watcher name
 - hotel name
-- notification type
-- notification webhook
+- room type name
+- notification provider
+- notification target
 
-Optional but commonly useful:
-- room type keyword
+Common optional fields:
+
 - target price
-- minimum expected price
-- poll interval in minutes
+- minimum reasonable price
+- polling interval in minutes
+- quiet hours
+- daily notification limit
+- minimum price-drop threshold
 
-### Notification behavior
-- send a notification if current price is below target price
-- send a notification if current price is lower than last check
-- do not repeat for the same or higher already-notified price
-- for Feishu:
-  - target hit sends a stronger card
-  - target hit also sends `@all`
-  - non-target drop sends a normal card
+## Notification Providers
 
-### Login / session flow
-Access to Ctrip pages may depend on your own login state.
+The UI currently supports:
+
+- `Feishu` robot webhook
+- `WeCom` robot webhook
+- `Slack` incoming webhook
+- `Discord` channel webhook
+- `Telegram` bot token + chat ID
+
+Behavior highlights:
+
+- target price hit is visually stronger than a normal drop
+- `Feishu` target-hit alerts also send `@all`
+- price-drop notifications can be limited by threshold, quiet hours, and daily caps
+
+## Session / Login Flow
+
+Some Ctrip pages depend on your own login/session state.
 
 Recommended flow:
-1. open the app page
-2. click `Sign in and save session`
-3. finish login in the opened browser window
-4. click `I have finished signing in`
-5. run `Check now`
 
-## Configuration
-
-### IM webhook
-The UI supports:
-- `Feishu`
-- `WeCom`
-
-Select the IM type and paste the matching robot webhook URL.
-
-### Advanced settings
-Advanced settings are mainly for troubleshooting:
-- custom request headers JSON
-- custom price regex
-
-Example:
-
-```json
-{
-  "Cookie": "your-cookie-here"
-}
-```
-
-## FAQ
-
-### Why didn’t I receive a notification?
-Most commonly because the notification condition was not met yet:
-- current price is still above target price
-- current price is not lower than the last notified price
-
-### Why is login required?
-Ctrip may show different content depending on session, device, region, or other access conditions.
-
-### Why does the trend chart not show all history?
-The chart is intentionally limited for UI readability, but the underlying price history is now kept in full.
-
-### Why can historical low time be inaccurate for old data?
-Older versions only kept a rolling slice of price history. For newly collected data, the low-price timestamp now persists correctly.
+1. Open the app
+2. Open the session panel
+3. Start the dedicated Ctrip login flow
+4. Finish login in the opened browser window
+5. Save and verify the session
+6. Run a check or let the watcher continue polling
 
 ## Regression Checks
 
@@ -177,6 +176,7 @@ Older versions only kept a rolling slice of price history. For newly collected d
 ```
 
 Covers:
+
 - Python syntax
 - repository CRUD
 - notification logic
@@ -190,75 +190,79 @@ Covers:
 ./scripts/run_smoke_checks.sh
 ```
 
-Note:
+Notes:
+
 - this is closer to a real browser environment
-- it may fail in restricted environments
+- it may fail in restricted or headless-hostile environments
 - local machine results are the most meaningful
 
-## Git / Open Source Notes
+## Privacy & Runtime Data
 
-Before publishing this repository, make sure you do **not** commit local runtime data.
+This app is intentionally local-first.
 
-Ignored by default now:
+Runtime files should stay local and should not be committed:
+
 - `data.db`
 - `logs/`
 - `session_profiles/`
 - `debug_screens/`
-- `__pycache__/`
 
-Why these should stay local:
-- `data.db` may contain your personal watcher data
-- `session_profiles/` may contain browser session and login material
-- `logs/` may include local paths, runtime errors, and debugging details
-- `debug_screens/` may contain captured page content
+These may contain:
 
-Recommended open-source workflow:
-1. keep source code, templates, static assets, tests, and scripts in git
-2. keep runtime data local only
-3. if needed, publish a clean sample config or sample screenshots separately
+- your watcher data
+- your session artifacts
+- local logs and debugging output
+- captured page content
 
-Run the pre-publish self-check before pushing:
+## Publishing Safety
+
+Run the built-in pre-publish check before pushing:
 
 ```bash
 ./scripts/prepublish_check.sh
 ```
 
-## Project Structure
+It checks for:
 
-```text
-hotel_price_alert/
-  api.py
-  server.py
-  repository.py
-  notifications.py
-  utils.py
-  fetchers.py
-  extractors.py
-  session.py
-  services/
-templates/
-static/
-scripts/
-tests/
-```
+- tracked runtime data
+- missing `.gitignore` coverage
+- likely real webhook secrets
 
-## Development Notes
-- current repository only targets `Ctrip`
-- notification layer is already abstracted enough for more IM integrations later
-- browser/session logic remains the most environment-sensitive part
+## FAQ
 
-## Legal / Responsible Use
+### Why did I not receive a notification?
 
-This project is intended for personal, local use only.
+Common reasons:
 
-Please keep these boundaries in mind:
-- use it only with websites and accounts you are authorized to access
-- review and follow the target website’s terms, policies, and applicable laws before using automation
-- keep request frequency low and avoid behavior that may burden, interfere with, or bypass a website’s normal controls
-- do not use this project to resell data, build a commercial data service, or run large-scale collection jobs
-- do not commit personal session data, cookies, logs, screenshots, or webhook secrets into Git
+- current price has not reached the target
+- current price did not beat the last notified price
+- the watcher is inside quiet hours
+- the daily notification limit was reached
+- the price drop did not meet the minimum drop threshold
 
-This repository does not provide anti-bot bypass tooling, CAPTCHA solving, proxy rotation, or bulk collection features, and it should not be used for those purposes.
+### Why does a watcher show room not found?
 
-## Disclaimer
-Use this project responsibly and only in ways that comply with the target website’s terms and your local laws.
+This project now favors stricter room matching over loose fuzzy matches.
+
+That reduces false positives, but it also means you should prefer the full room name shown on the page.
+
+### Why does the chart window sometimes look the same for 7 days and 30 days?
+
+Because your local history may currently only contain data from the last several days. Once more data accumulates, the windows will diverge naturally.
+
+### Why is login/session handling needed?
+
+Ctrip may render different content depending on session state, region, device context, and other access conditions.
+
+## Responsible Use
+
+This project is intended for personal monitoring, research, and workflow automation on pages you are already able to access in your own browser.
+
+Please use it responsibly:
+
+- respect the target platform's terms and operational limits
+- avoid abusive traffic patterns
+- do not use it to bypass access controls
+- do not publish personal session data, cookies, or webhook secrets
+
+This repository is provided as a local automation utility, not as a hosted scraping service.

@@ -38,20 +38,20 @@ def main() -> int:
 
     if not importlib.util.find_spec('playwright'):
         print('❌ Missing the playwright Python package')
-        print('Recommendation: run `python3 -m pip install playwright`')
+        print('Suggested fix: run `python3 -m pip install playwright`')
         return 1
     print('✅ Found the playwright Python package')
 
     if CACHE_DIR.exists():
         print(f'✅ Browser cache directory exists: {CACHE_DIR}')
     else:
-        print(f'⚠️ Playwright browser cache directory was not found: {CACHE_DIR}')
-        print('Will fall back to system-installed browsers')
+        print(f'⚠️ Playwright browser cache directory not found: {CACHE_DIR}')
+        print('Will try to use a system-installed browser instead')
 
     browsers = list_browsers()
     if not browsers:
         print('❌ No usable Chromium/Chrome/Edge executable was found')
-        print('Recommendation: install Google Chrome or run `python3 -m playwright install chromium`')
+        print('Suggested fix: install Google Chrome, or run `python3 -m playwright install chromium`')
         return 1
 
     print('✅ Found these browser candidates:')
@@ -70,16 +70,16 @@ def main() -> int:
                 text = page.locator('body').inner_text()
                 browser_obj.close()
                 if text.strip() != 'ok':
-                    raise RuntimeError('The browser launched, but the page did not render correctly')
+                    raise RuntimeError('The browser launched, but page rendering failed')
                 print(f'✅ Browser launch test passed: {browser_path}')
-                print('✅ Environment check passed. You can start the price alert service now')
+                print('✅ Environment check passed. The app should be able to start')
                 return 0
             except Exception as exc:
                 errors.append(f'{browser_path}: {exc}')
                 print(f'❌ Launch failed: {browser_path}')
 
     print('❌ All browser candidates failed to launch')
-    print('Recommendation: close all Chrome windows and try again. If it still fails, share the error output.')
+    print('Suggested fix: close all Chrome windows and try again. If it still fails, share the errors below.')
     for item in errors:
         print(f'  - {item}')
     return 1

@@ -8,110 +8,36 @@
 </head>
 <body>
   <main class="page">
-    <section class="env-banner" aria-label="Stable environment marker">
-      <strong>Ctrip Hotel Alert · Stable</strong>
-      <span>Current address: 127.0.0.1:8766</span>
-    </section>
-
     <section class="hero">
       <div>
-        <h1>Ctrip Hotel Price Alert · Stable</h1>
-        <p>Paste a Ctrip hotel URL, use the dedicated Ctrip session, and track price drops by your room keyword.</p>
+        <h1>Ctrip Hotel Price Alert · Stable Build</h1>
+        <p>Paste a Ctrip hotel URL, reuse the dedicated session, and monitor price changes for the exact room you care about.</p>
       </div>
-      <div class="hero-badge">Target: Ctrip · Stable</div>
     </section>
 
     <section class="card boot-card" id="settings-card">
-      <h2>Watcher Settings</h2>
-      <form id="watcher-form">
-        <input type="hidden" name="room_type_meta" id="room_type_meta">
-        <input type="hidden" name="edit_id" id="edit_id">
-        <div class="grid">
-          <label>
-            <span>Platform</span>
-            <input value="Ctrip" disabled>
-            <input type="hidden" name="source_type" id="source_type" value="ctrip">
-          </label>
-          <label>
-            <span>Your target price</span>
-            <input name="threshold_price" type="number" step="0.01" placeholder="e.g. 3200">
-          </label>
-          <label>
-            <span>Minimum reasonable price (false-positive guard)</span>
-            <input name="min_expected_price" type="number" step="0.01" placeholder="e.g. 2000">
-          </label>
-          <label>
-            <span>Polling interval (minutes)</span>
-            <input name="poll_interval_minutes" type="number" step="1" min="1" placeholder="e.g. 5">
-          </label>
-          <label class="full">
-            <span>Hotel URL</span>
-            <input name="target_url" id="target_url" placeholder="Paste the hotel detail page URL directly" required>
-          </label>
-          <label>
-            <span>Watcher name</span>
-            <input name="name" placeholder="e.g. The Racha Phuket" required>
-          </label>
-          <label>
-            <span>Hotel name</span>
-            <input name="hotel_name" placeholder="e.g. The Racha" required>
-          </label>
-          <label class="full">
-            <span>Room keyword</span>
-            <input name="room_type_keyword" id="room_type_keyword" placeholder="e.g. Spa Pool Suite">
-          </label>
-          <label class="full">
-            <span>Notification webhook / bot URL</span>
-            <div class="inline-actions">
-              <select name="notify_type" id="notify_type">
-                <option value="feishu">Feishu</option>
-                <option value="wechat">WeCom</option>
-              </select>
-              <input name="notify_target" id="notify_target" placeholder="Enter an IM bot webhook URL, such as Feishu or WeCom" required>
-              <button type="button" id="test-notify" class="secondary small">Send Test</button>
-            </div>
-          </label>
+      <div class="list-head page-actions">
+        <div>
+          <h2>Watchers</h2>
         </div>
-
-        <div id="app-session-panel" class="session-panel">
-          <div id="session-title" class="session-title">Dedicated Sign-In</div>
-          <p id="session-hint" class="hint">Ctrip uses a dedicated session. Sign in first for more stable price checks.</p>
-          <div class="inline-actions compact wrap-actions">
-            <button type="button" id="start-app-login" class="secondary">Sign in and save session</button>
-            <button type="button" id="finish-app-login" class="secondary">I have finished signing in</button>
-            <button type="button" id="verify-app-session" class="secondary">Verify session</button>
-            <span id="session-status" class="status-text" aria-live="polite"></span>
-          </div>
-        </div>
-
-        <details class="advanced">
-          <summary>Advanced settings (usually optional)</summary>
-          <div class="grid advanced-grid">
-            <label class="full">
-              <span>Custom request headers JSON (advanced users only)</span>
-              <textarea name="request_headers" id="request_headers" rows="4" placeholder='e.g. {"User-Agent":"Mozilla/..."}'></textarea>
-            </label>
-            <label class="full">
-              <span>Custom price regex</span>
-              <input name="price_pattern" id="price_pattern" placeholder="Usually not needed">
-            </label>
-          </div>
-        </details>
-
-        <p id="preset-hint" class="hint"></p>
-        <div class="actions actions-row">
-          <button type="submit" id="submit-btn">Start Monitoring</button>
-          <button type="button" id="cancel-edit-btn" class="secondary" hidden>Cancel Edit</button>
+        <div class="page-actions-right">
+          <button type="button" id="open-create-modal" class="primary-cta">New Watcher</button>
           <span id="form-status" class="status-text" aria-live="polite"></span>
         </div>
-      </form>
+      </div>
+
+      <button type="button" id="open-session-modal" class="session-summary-card">
+        <span class="session-summary-label">Ctrip Session</span>
+        <strong id="session-summary-state" class="session-summary-state">Checking</strong>
+        <span id="session-summary-text" class="session-summary-text">Manage login, save the session, and verify availability</span>
+      </button>
     </section>
 
     <section id="debug-panel" class="card debug-panel" hidden>
       <div class="list-head">
         <h2>Diagnostics</h2>
         <div class="inline-actions compact">
-          <button id="copy-debug" class="secondary">Copy all diagnostics</button>
+          <button id="copy-debug" class="secondary">Copy Diagnostics</button>
           <button id="hide-debug" class="secondary">Hide</button>
         </div>
       </div>
@@ -121,17 +47,147 @@
 
     <section class="card boot-card" id="watchers-card">
       <div class="list-head">
-        <h2>Watchers</h2>
+        <h2>Watcher List</h2>
         <div class="inline-actions compact">
           <button id="refresh-btn" class="secondary">Refresh</button>
           <span id="list-status" class="status-text" aria-live="polite"></span>
         </div>
       </div>
       <p id="meta" class="hint"></p>
-      <p id="build-info" class="hint">Page version: 2026-04-07-ctrip-price-card-v1</p>
       <div id="watcher-list" class="list"></div>
     </section>
   </main>
+
+  <div id="watcher-modal" class="modal-backdrop" hidden>
+    <div class="modal-shell" role="dialog" aria-modal="true" aria-labelledby="watcher-modal-title">
+      <section class="card modal-card">
+        <div class="list-head modal-head">
+          <div>
+            <h2 id="watcher-modal-title">New Watcher</h2>
+            <p class="hint">Enter the hotel URL, room name, and notification policy.</p>
+          </div>
+          <button type="button" id="close-watcher-modal" class="secondary modal-close">Close</button>
+        </div>
+
+        <form id="watcher-form">
+        <input type="hidden" name="room_type_meta" id="room_type_meta">
+        <input type="hidden" name="edit_id" id="edit_id">
+        <div class="grid">
+          <label>
+            <span>Platform</span>
+            <input value="Ctrip" disabled>
+            <input type="hidden" name="source_type" id="source_type" value="ctrip">
+          </label>
+          <label>
+            <span>Target Price</span>
+            <input name="threshold_price" type="number" step="0.01" placeholder="e.g. 3200">
+          </label>
+          <label>
+            <span>Minimum Reasonable Price</span>
+            <input name="min_expected_price" type="number" step="0.01" placeholder="e.g. 2000">
+          </label>
+          <label>
+            <span>Polling Interval (minutes)</span>
+            <input name="poll_interval_minutes" type="number" step="1" min="1" placeholder="e.g. 5">
+          </label>
+          <label class="full">
+            <span>Hotel URL</span>
+            <input name="target_url" id="target_url" placeholder="Paste the hotel detail page URL" required>
+          </label>
+          <label>
+            <span>Watcher Name</span>
+            <input name="name" placeholder="e.g. The Racha Phuket" required>
+          </label>
+          <label>
+            <span>Hotel Name</span>
+            <input name="hotel_name" placeholder="e.g. The Racha" required>
+          </label>
+          <label class="full">
+            <span>Room Name</span>
+            <input name="room_type_keyword" id="room_type_keyword" placeholder="Use the full room name shown on the page, e.g. Small Pool Suite">
+            <small id="room-type-keyword-hint" class="field-hint">Use the full room name. Generic terms like “suite”, “pool suite”, or “king room” may match the wrong room.</small>
+          </label>
+          <label class="full">
+            <span>Notification Target / Bot Config</span>
+            <div class="inline-actions">
+              <select name="notify_type" id="notify_type">
+                <option value="feishu">Feishu</option>
+                <option value="wechat">WeCom</option>
+                <option value="slack">Slack</option>
+                <option value="discord">Discord</option>
+                <option value="telegram">Telegram</option>
+              </select>
+              <input name="notify_target" id="notify_target" placeholder="Paste the IM webhook URL, for example Feishu or WeCom" required>
+              <button type="button" id="test-notify" class="secondary small">Send Test</button>
+            </div>
+            <div id="telegram-target-fields" class="notify-extra-grid" hidden>
+              <input type="text" id="telegram_bot_token" placeholder="Telegram Bot Token, e.g. 123456789:ABCDEF_token">
+              <input type="text" id="telegram_chat_id" placeholder="Telegram Chat ID, e.g. -1001234567890">
+            </div>
+            <small id="notify-target-hint" class="field-hint">Feishu, WeCom, Slack, and Discord use webhook URLs. Telegram uses Bot Token + Chat ID.</small>
+          </label>
+        </div>
+
+        <details class="advanced">
+          <summary>Advanced Settings</summary>
+          <div class="grid advanced-grid">
+            <label>
+              <span>Quiet Hours Start</span>
+              <input name="quiet_hours_start" id="quiet_hours_start" type="time" step="60">
+            </label>
+            <label>
+              <span>Quiet Hours End</span>
+              <input name="quiet_hours_end" id="quiet_hours_end" type="time" step="60">
+            </label>
+            <label>
+              <span>Daily Notification Limit</span>
+              <input name="daily_notification_limit" id="daily_notification_limit" type="number" min="0" step="1" placeholder="0 means unlimited">
+            </label>
+            <label>
+              <span>Minimum Price Drop for Alerts</span>
+              <input name="min_price_drop_amount" id="min_price_drop_amount" type="number" min="0" step="0.01" placeholder="e.g. 100">
+            </label>
+            <label class="full checkbox-field">
+              <input name="notify_only_target_hit" id="notify_only_target_hit" type="checkbox">
+              <span>Only alert when target price is reached</span>
+            </label>
+          </div>
+        </details>
+
+        <p id="preset-hint" class="hint"></p>
+        <div class="actions actions-row">
+          <button type="submit" id="submit-btn">Create Watcher</button>
+          <button type="button" id="cancel-edit-btn" class="secondary" hidden>Cancel</button>
+        </div>
+        </form>
+      </section>
+    </div>
+  </div>
+
+  <div id="session-modal" class="modal-backdrop" hidden>
+    <div class="modal-shell modal-shell-narrow" role="dialog" aria-modal="true" aria-labelledby="session-modal-title">
+      <section class="card modal-card">
+        <div class="list-head modal-head">
+          <div>
+            <h2 id="session-modal-title">Sign In and Save the Ctrip Session</h2>
+            <p class="hint">You usually only need to maintain this session once. Existing watchers will reuse it.</p>
+          </div>
+          <button type="button" id="close-session-modal" class="secondary modal-close">Close</button>
+        </div>
+
+        <div id="app-session-panel" class="session-panel">
+          <div id="session-title" class="session-title">Dedicated Session</div>
+          <p id="session-hint" class="hint">This app uses a dedicated Ctrip session. Sign in first for more reliable checks.</p>
+          <div class="inline-actions compact wrap-actions">
+            <button type="button" id="start-app-login" class="secondary">Start Login</button>
+            <button type="button" id="finish-app-login" class="secondary">I Finished Login</button>
+            <button type="button" id="verify-app-session" class="secondary">Verify Session</button>
+          </div>
+          <p id="session-status" class="status-text session-status-block" aria-live="polite"></p>
+        </div>
+      </section>
+    </div>
+  </div>
 
   <div id="toast" class="toast" hidden></div>
 
@@ -141,10 +197,13 @@
     const pendingWatcherActions = new Map();
     let toastTimer = null;
     let latestDebugText = '';
+    const trendWindowByWatcher = new Map();
+    let watcherModalOpen = false;
+    let sessionModalOpen = false;
 
     function sectionButtonIds(section) {
       if (section === 'settings') {
-        return ['test-notify', 'start-app-login', 'finish-app-login', 'verify-app-session', 'submit-btn', 'cancel-edit-btn'];
+        return ['open-create-modal', 'open-session-modal'];
       }
       if (section === 'watchers') {
         return ['refresh-btn'];
@@ -178,7 +237,7 @@
       try {
         response = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...options });
       } catch (networkError) {
-        const error = new Error('The page could not reach the local service. Please relaunch the stable starter command.');
+        const error = new Error('The page could not reach the local service. Restart the app with the local launcher and try again.');
         error.debug = null;
         throw error;
       }
@@ -192,8 +251,13 @@
     }
 
     function fmtPrice(currency, value) {
-      if (value === null || value === undefined || value === '') return 'Not checked';
+      if (value === null || value === undefined || value === '') return 'Unavailable';
       return `${currency} ${Number(value).toFixed(2)}`;
+    }
+
+    function fmtCompactPrice(currency, value) {
+      if (value === null || value === undefined || value === '' || Number.isNaN(Number(value))) return '--';
+      return `${currency} ${Number(value).toFixed(0)}`;
     }
 
 
@@ -202,7 +266,7 @@
       const normalized = String(value).replace(' UTC', 'Z').replace(' ', 'T');
       const date = new Date(normalized);
       if (Number.isNaN(date.getTime())) return value;
-      return new Intl.DateTimeFormat('zh-CN', {
+      return new Intl.DateTimeFormat('en-GB', {
         timeZone: 'Asia/Shanghai',
         year: 'numeric', month: '2-digit', day: '2-digit',
         hour: '2-digit', minute: '2-digit', second: '2-digit',
@@ -229,15 +293,86 @@
       const parts = [];
       if (hours > 0) parts.push(`${hours}h`);
       if (minutes > 0 || hours > 0) parts.push(`${minutes}m`);
-      parts.push(`${seconds}s remaining`);
-      return `(~ ${parts.join(' ')}）`;
+      parts.push(`${seconds}s`);
+      return `(about ${parts.join(' ')})`;
     }
 
     function resetFormMode() {
       document.getElementById('edit_id').value = '';
-      document.getElementById('submit-btn').textContent = 'Start Monitoring';
+      document.getElementById('submit-btn').textContent = 'Create Watcher';
       document.getElementById('cancel-edit-btn').hidden = true;
+      document.getElementById('watcher-modal-title').textContent = 'New Watcher';
       setStatus('form-status', '');
+    }
+
+    function resetWatcherFormFields() {
+      document.getElementById('watcher-form').reset();
+      document.getElementById('room_type_meta').value = '';
+      document.querySelector('input[name="poll_interval_minutes"]').value = 5;
+      document.getElementById('daily_notification_limit').value = 0;
+      document.getElementById('quiet_hours_start').value = '';
+      document.getElementById('quiet_hours_end').value = '';
+      document.getElementById('min_price_drop_amount').value = '';
+      document.getElementById('notify_only_target_hit').checked = false;
+      resetFormMode();
+      updatePresetHint();
+      updateRoomKeywordHint();
+      updateNotifyTargetHint();
+    }
+
+    function openWatcherModal(mode = 'create') {
+      const modal = document.getElementById('watcher-modal');
+      if (!modal) return;
+      if (mode === 'create') {
+        resetWatcherFormFields();
+      }
+      modal.hidden = false;
+      watcherModalOpen = true;
+      syncBodyModalState();
+      window.requestAnimationFrame(() => {
+        const focusTarget = mode === 'edit'
+          ? document.querySelector('input[name="name"]')
+          : document.getElementById('target_url');
+        focusTarget?.focus();
+      });
+    }
+
+    function closeWatcherModal() {
+      const modal = document.getElementById('watcher-modal');
+      if (!modal) return;
+      modal.hidden = true;
+      watcherModalOpen = false;
+      syncBodyModalState();
+    }
+
+    function openSessionModal() {
+      const modal = document.getElementById('session-modal');
+      if (!modal) return;
+      modal.hidden = false;
+      sessionModalOpen = true;
+      syncBodyModalState();
+    }
+
+    function closeSessionModal() {
+      const modal = document.getElementById('session-modal');
+      if (!modal) return;
+      modal.hidden = true;
+      sessionModalOpen = false;
+      syncBodyModalState();
+    }
+
+    function syncBodyModalState() {
+      document.body.classList.toggle('modal-open', watcherModalOpen || sessionModalOpen);
+    }
+
+    function setSessionSummary(stateText, detailText = '', tone = 'neutral') {
+      const state = document.getElementById('session-summary-state');
+      const detail = document.getElementById('session-summary-text');
+      const trigger = document.getElementById('open-session-modal');
+      if (!state || !detail || !trigger) return;
+      state.textContent = stateText;
+      detail.textContent = detailText;
+      trigger.dataset.tone = tone;
     }
 
     function fillFormForEdit(item) {
@@ -252,14 +387,180 @@
       document.getElementById('room_type_keyword').value = item.room_type_keyword || '';
       document.getElementById('room_type_meta').value = item.room_type_meta || '';
       document.getElementById('notify_type').value = item.notify_type || 'feishu';
-      document.getElementById('notify_target').value = item.notify_target || '';
-      document.getElementById('request_headers').value = item.request_headers || '{}';
-      document.getElementById('price_pattern').value = item.price_pattern || '';
+      hydrateNotifyTargetInputs(item.notify_type || 'feishu', item.notify_target || '');
+      document.getElementById('quiet_hours_start').value = item.quiet_hours_start || '';
+      document.getElementById('quiet_hours_end').value = item.quiet_hours_end || '';
+      document.getElementById('daily_notification_limit').value = item.daily_notification_limit ?? 0;
+      document.getElementById('min_price_drop_amount').value = item.min_price_drop_amount ?? '';
+      document.getElementById('notify_only_target_hit').checked = Boolean(item.notify_only_target_hit);
       document.getElementById('submit-btn').textContent = 'Save Changes';
       document.getElementById('cancel-edit-btn').hidden = false;
+      document.getElementById('watcher-modal-title').textContent = 'Edit Watcher';
       updateLoginPanel();
+      updateRoomKeywordHint();
+      updateNotifyTargetHint();
       setStatus('form-status', `Editing: ${item.name}`);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function normalizeRoomKeywordValue(value) {
+      return String(value || '').trim().replace(/\s+/g, '');
+    }
+
+    function validateRoomKeyword(value) {
+      const normalized = normalizeRoomKeywordValue(value);
+      if (!normalized) {
+        return {
+          valid: true,
+          message: 'Use the full room name. Generic terms like “suite”, “pool suite”, or “king room” may match the wrong room.',
+          tone: 'default',
+        };
+      }
+      const genericTerms = new Set(['suite', 'pool suite', 'king room', 'twin room', 'king', 'twin', 'room', 'villa', 'deluxe room', 'garden room', 'sea view room']);
+      if (genericTerms.has(normalized)) {
+        return {
+          valid: false,
+          message: `“${normalized}” is too vague. Use the full room name shown on the page.`,
+          tone: 'error',
+        };
+      }
+      if (normalized.length <= 3) {
+        return {
+          valid: false,
+          message: `“${normalized}” is too short. Use a more complete room name.`,
+          tone: 'error',
+        };
+      }
+      return {
+        valid: true,
+        message: 'The room name looks usable. The full room name from the page is still recommended.',
+        tone: 'success',
+      };
+    }
+
+    function updateRoomKeywordHint() {
+      const field = document.getElementById('room_type_keyword');
+      const hint = document.getElementById('room-type-keyword-hint');
+      if (!field || !hint) return true;
+      const result = validateRoomKeyword(field.value);
+      hint.textContent = result.message;
+      hint.classList.toggle('error', result.tone === 'error');
+      hint.classList.toggle('success', result.tone === 'success');
+      return result.valid;
+    }
+
+    function notifyTargetMeta(notifyType) {
+      const value = String(notifyType || 'feishu').trim() || 'feishu';
+      if (value === 'telegram') {
+        return {
+          placeholder: '',
+          hint: 'Telegram uses two fields: Bot Token and Chat ID, not a webhook URL.',
+        };
+      }
+      if (value === 'slack') {
+        return {
+          placeholder: 'Enter the Slack Incoming Webhook URL',
+          hint: 'Slack uses an Incoming Webhook URL.',
+        };
+      }
+      if (value === 'discord') {
+        return {
+          placeholder: 'Enter the Discord channel webhook URL',
+          hint: 'Discord uses a channel webhook URL.',
+        };
+      }
+      if (value === 'wechat') {
+        return {
+          placeholder: 'Enter the WeCom bot webhook URL',
+          hint: 'WeCom uses a group bot webhook URL.',
+        };
+      }
+      return {
+        placeholder: 'Enter the Feishu bot webhook URL',
+        hint: 'Feishu uses a group bot webhook URL.',
+      };
+    }
+
+    function splitTelegramTarget(value) {
+      const raw = String(value || '').trim();
+      if (!raw || !raw.includes('|')) return { botToken: '', chatId: '' };
+      const [botToken, chatId] = raw.split('|', 2);
+      return { botToken: (botToken || '').trim(), chatId: (chatId || '').trim() };
+    }
+
+    function composeNotifyTarget() {
+      const notifyType = document.getElementById('notify_type').value;
+      if (notifyType === 'telegram') {
+        const botToken = document.getElementById('telegram_bot_token').value.trim();
+        const chatId = document.getElementById('telegram_chat_id').value.trim();
+        return botToken && chatId ? `${botToken}|${chatId}` : '';
+      }
+      return document.getElementById('notify_target').value.trim();
+    }
+
+    function hydrateNotifyTargetInputs(notifyType, notifyTarget) {
+      const targetValue = String(notifyTarget || '').trim();
+      const botTokenInput = document.getElementById('telegram_bot_token');
+      const chatIdInput = document.getElementById('telegram_chat_id');
+      const standardInput = document.getElementById('notify_target');
+      if (!botTokenInput || !chatIdInput || !standardInput) return;
+      if (notifyType === 'telegram') {
+        const parsed = splitTelegramTarget(targetValue);
+        botTokenInput.value = parsed.botToken;
+        chatIdInput.value = parsed.chatId;
+        standardInput.value = '';
+        return;
+      }
+      botTokenInput.value = '';
+      chatIdInput.value = '';
+      standardInput.value = targetValue;
+    }
+
+    function validateNotifyTarget(options = {}) {
+      const { strict = false } = options;
+      const notifyType = document.getElementById('notify_type').value;
+      const hint = document.getElementById('notify-target-hint');
+      const target = composeNotifyTarget();
+      if (notifyType === 'telegram') {
+        const botToken = document.getElementById('telegram_bot_token').value.trim();
+        const chatId = document.getElementById('telegram_chat_id').value.trim();
+        const valid = Boolean(botToken && chatId);
+        const dirty = Boolean(botToken || chatId);
+        hint.classList.remove('error', 'success');
+        if (valid) {
+          hint.classList.add('success');
+          hint.textContent = 'The Telegram config looks valid. Test messages will be sent directly to this chat ID.';
+          return true;
+        }
+        if (strict || dirty) {
+          hint.classList.add('error');
+          hint.textContent = 'Telegram requires both Bot Token and Chat ID.';
+          return false;
+        }
+        hint.textContent = notifyTargetMeta(notifyType).hint;
+        return false;
+      }
+      const valid = Boolean(target);
+      hint.classList.remove('error', 'success');
+      if (!valid && strict) {
+        hint.classList.add('error');
+      }
+      hint.textContent = notifyTargetMeta(notifyType).hint;
+      return valid;
+    }
+
+    function updateNotifyTargetHint() {
+      const select = document.getElementById('notify_type');
+      const input = document.getElementById('notify_target');
+      const hint = document.getElementById('notify-target-hint');
+      const telegramFields = document.getElementById('telegram-target-fields');
+      if (!select || !input || !hint || !telegramFields) return;
+      const meta = notifyTargetMeta(select.value);
+      input.placeholder = meta.placeholder;
+      const isTelegram = select.value === 'telegram';
+      telegramFields.hidden = !isTelegram;
+      input.hidden = isTelegram;
+      input.required = !isTelegram;
+      validateNotifyTarget();
     }
 
     function showToast(message, isError = false) {
@@ -349,14 +650,14 @@
     }
 
     function renderTags(tags = []) {
-      if (!tags.length) return '<span class="tag muted">No extra tags</span>';
+      if (!tags.length) return '';
       return tags.map((tag) => `<span class="tag">${tag}</span>`).join('');
     }
 
     function fmtShortTimeUtc8(value) {
       const date = parseUtcValue(value);
       if (!date) return '--:--';
-      return new Intl.DateTimeFormat('zh-CN', {
+      return new Intl.DateTimeFormat('en-GB', {
         timeZone: 'Asia/Shanghai',
         hour: '2-digit', minute: '2-digit', hour12: false,
       }).format(date);
@@ -365,7 +666,7 @@
     function fmtFullTimeUtc8(value) {
       const date = parseUtcValue(value);
       if (!date) return '--';
-      return new Intl.DateTimeFormat('zh-CN', {
+      return new Intl.DateTimeFormat('en-GB', {
         timeZone: 'Asia/Shanghai',
         month: '2-digit', day: '2-digit',
         hour: '2-digit', minute: '2-digit', second: '2-digit',
@@ -386,7 +687,23 @@
       return lowItem;
     }
 
-    function renderSparkline(history = []) {
+    function trendWindowLabel(key) {
+      if (key === '7d') return '7D';
+      if (key === '30d') return '30D';
+      return 'All';
+    }
+
+    function filterHistoryByWindow(history = [], key = '30d') {
+      if (key === 'all') return history || [];
+      const days = key === '7d' ? 7 : 30;
+      const threshold = Date.now() - days * 24 * 60 * 60 * 1000;
+      return (history || []).filter((item) => {
+        const date = parseUtcValue(item.checked_at || item.notified_at);
+        return date ? date.getTime() >= threshold : false;
+      });
+    }
+
+    function renderSparkline(history = [], notificationEvents = []) {
       if (!history.length) return '<div class="spark-empty">No price history yet</div>';
       const items = history
         .map((item) => ({ price: Number(item.price), checked_at: item.checked_at }))
@@ -413,9 +730,30 @@
       const yTicks = [max, yMid, min].map((value) => ({ value, y: getY(value) }));
       const lastPriceLabel = Number.isFinite(last.price) ? `¥${Math.round(last.price)}` : '';
       const gradientId = `spark-gradient-${Math.random().toString(36).slice(2, 8)}`;
+      const eventDots = (notificationEvents || [])
+        .map((event) => {
+          const eventDate = parseUtcValue(event.notified_at);
+          if (!eventDate) return null;
+          const firstDate = parseUtcValue(first.checked_at);
+          const lastDate = parseUtcValue(last.checked_at);
+          if (!firstDate || !lastDate) return null;
+          const totalMs = Math.max(lastDate.getTime() - firstDate.getTime(), 1);
+          const x = items.length === 1
+            ? leftPad + plotWidth / 2
+            : leftPad + ((eventDate.getTime() - firstDate.getTime()) / totalMs) * plotWidth;
+          if (x < leftPad - 4 || x > leftPad + plotWidth + 4) return null;
+          return { ...event, x, y: getY(Number(event.price)) };
+        })
+        .filter(Boolean);
       return `
         <div class="chart-wrap">
-          <div class="chart-caption">X-axis: check time   Y-axis: price (CNY)</div><div class="chart-tooltip" hidden>Hover over a point for details</div>
+          <div class="chart-caption">X axis: check time · Y axis: price (CNY)</div>
+          <div class="chart-legend">
+            <span><i class="legend-dot trend-line-dot"></i>Price points</span>
+            <span><i class="legend-dot trend-drop-dot"></i>Lower than previous</span>
+            <span><i class="legend-dot trend-notify-dot"></i>Alert events</span>
+          </div>
+          <div class="chart-tooltip" hidden>Hover over a point for details</div>
           <svg class="sparkline" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img" aria-label="Price trend chart">
             <defs>
               <linearGradient id="${gradientId}" x1="0" y1="0" x2="0" y2="1">
@@ -429,9 +767,10 @@
             ${yTicks.map((tick) => `<text x="6" y="${tick.y + 4}" font-size="10" fill="#64748b">¥${Math.round(tick.value)}</text>`).join('')}
             <polygon fill="url(#${gradientId})" points="${points} ${getX(items.length - 1)},${topPad + plotHeight} ${getX(0)},${topPad + plotHeight}" />
             <polyline fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="${points}" />
+            ${eventDots.map((event) => `<circle cx="${event.x}" cy="${event.y}" r="5" fill="${event.reason === 'threshold_hit' ? '#dc2626' : '#f59e0b'}" stroke="#fff" stroke-width="1.4" opacity="0.98" />`).join('')}
             ${items.map((item, index) => `
               <g class="spark-point-group">
-                <circle cx="${getX(index)}" cy="${getY(item.price)}" r="2.5" fill="#2563eb" />
+                <circle cx="${getX(index)}" cy="${getY(item.price)}" r="${index > 0 && item.price < items[index - 1].price ? '3.5' : '2.5'}" fill="${index > 0 && item.price < items[index - 1].price ? '#16a34a' : '#2563eb'}" />
                 <circle
                   class="spark-hotspot"
                   cx="${getX(index)}"
@@ -440,6 +779,7 @@
                   fill="transparent"
                   data-price="${Math.round(item.price)}"
                   data-time="${fmtFullTimeUtc8(item.checked_at)}"
+                  data-event="${eventDots.find((event) => Math.abs(event.x - getX(index)) < 4 && Math.abs(event.y - getY(item.price)) < 4)?.reason || ''}"
                 >
                   <title>${fmtFullTimeUtc8(item.checked_at)} · ¥${Math.round(item.price)}</title>
                 </circle>
@@ -472,8 +812,8 @@
       return {
         label: 'Ctrip',
         defaultUrl: 'https://hotels.ctrip.com/',
-        hint: 'Ctrip uses a dedicated session. Sign in first for more stable price checks.',
-        startText: 'Sign in to Ctrip and save session',
+        hint: 'This app uses a dedicated Ctrip session. Sign in first for more reliable checks.',
+        startText: 'Start Login',
       };
     }
 
@@ -483,10 +823,19 @@
       try {
         const data = await request(`/api/app-session-status?source_type=${encodeURIComponent(sourceType)}`);
         const meta = sessionPlatformMeta(sourceType);
-        if (data.login_running) return setStatus('session-status', `${meta.label} The sign-in window is open. Click “I have finished signing in” after you complete sign-in`);
-        if (data.last_error) return setStatus('session-status', `Sign-in window error: ${data.last_error}`, true);
-        setStatus('session-status', data.exists ? `A dedicated ${meta.label} session is already saved and ready to verify` : `No dedicated ${meta.label} session has been saved yet`);
-      } catch (_) {}
+        if (data.login_running) {
+          setStatus('session-status', `${meta.label} login window is open. Finish login there, then click “I Finished Login”.`);
+          return setSessionSummary('Login in progress', 'Finish login and save the session', 'warning');
+        }
+        if (data.last_error) {
+          setStatus('session-status', `Login window error: ${data.last_error}`, true);
+          return setSessionSummary('Error', data.last_error, 'danger');
+        }
+        setStatus('session-status', data.exists ? `A dedicated ${meta.label} session already exists and can be verified directly` : `No dedicated ${meta.label} session yet`);
+        setSessionSummary(data.exists ? 'Signed in' : 'Not signed in', data.exists ? 'Verify it or re-login to refresh the session' : 'Start login and save a dedicated session', data.exists ? 'success' : 'neutral');
+      } catch (_) {
+        setSessionSummary('Unknown', 'Open the session dialog for details', 'neutral');
+      }
     }
 
     function updateLoginPanel() {
@@ -498,7 +847,7 @@
       panel.hidden = !sourceType;
       if (!sourceType) return;
       const meta = sessionPlatformMeta(sourceType);
-      title.textContent = `${meta.label} Sign-In`;
+      title.textContent = `${meta.label} Login`;
       hint.textContent = meta.hint;
       startButton.textContent = meta.startText;
       loadAppSessionStatus();
@@ -510,7 +859,12 @@
         if (!tooltip) return;
         wrap.querySelectorAll('.spark-hotspot').forEach((point) => {
           point.addEventListener('mouseenter', () => {
-            tooltip.textContent = `${point.dataset.time} · ¥${point.dataset.price}`;
+            const eventText = point.dataset.event === 'threshold_hit'
+              ? ' · target-hit alert sent'
+              : point.dataset.event === 'price_drop'
+                ? ' · price-drop alert sent'
+                : '';
+            tooltip.textContent = `${point.dataset.time} · ¥${point.dataset.price}${eventText}`;
             tooltip.hidden = false;
           });
           point.addEventListener('mouseleave', () => {
@@ -554,49 +908,94 @@
       const root = document.getElementById('watcher-list');
       root.innerHTML = '';
       if (!currentWatchers.length) {
-        root.innerHTML = '<div class="empty">No watchers yet. Add your first one.</div>';
+        root.innerHTML = '<div class="empty">No watchers yet. Create one to get started.</div>';
         return;
       }
       currentWatchers.forEach((item) => {
+        const trendWindow = trendWindowByWatcher.get(item.id) || '30d';
         const roomLine = item.room_type_keyword ? `<p>Room: ${item.room_type_keyword}</p>` : '';
         const tagsLine = item.room_type_keyword ? `<div class="inline-tag-list">${renderTags(item.room_type_tags || [])}</div>` : '';
-        const chart = renderSparkline(item.history || []);
+        const chartHistorySource = (item.history_all && item.history_all.length) ? item.history_all : (item.history || []);
+        const chart = renderSparkline(filterHistoryByWindow(chartHistorySource, trendWindow), filterHistoryByWindow(item.notification_events || [], trendWindow));
         const lowestInfo = (item.all_time_low_price !== null && item.all_time_low_price !== undefined)
           ? { price: Number(item.all_time_low_price), checked_at: item.all_time_low_at }
           : historicalLowInfo(item.history || []);
+        const latestEvent = (item.notification_events || []).length ? item.notification_events[item.notification_events.length - 1] : null;
+        const currentPriceAvailable = item.current_price_available !== false;
+        const currentPriceValue = currentPriceAvailable ? fmtPrice(item.currency, item.last_price) : 'Unavailable';
+        const currentPriceSubtitle = currentPriceAvailable
+          ? `Target ${item.threshold_price ? fmtPrice(item.currency, item.threshold_price) : 'Not set'}`
+          : item.last_valid_price !== null && item.last_valid_price !== undefined
+            ? `Last valid price ${fmtPrice(item.currency, item.last_valid_price)}`
+            : 'Waiting for the room to appear again';
+        const policyBits = [];
+        if (item.notify_only_target_hit) policyBits.push('Only alert on target hit');
+        if (item.daily_notification_limit) policyBits.push(`Daily limit ${item.daily_notification_limit} alerts (sent today: ${item.notifications_today || 0})`);
+        if (item.min_price_drop_amount) policyBits.push(`Minimum drop ${fmtCompactPrice(item.currency, item.min_price_drop_amount)} required for alerts`);
+        if (item.quiet_hours_start && item.quiet_hours_end) policyBits.push(`Quiet hours ${item.quiet_hours_start} - ${item.quiet_hours_end}`);
+        const statusText = item.last_error ? `Error - ${item.last_error}` : 'Healthy';
         const div = document.createElement('div');
         div.className = 'watcher';
         div.innerHTML = `
           <div class="watcher-main">
-            <h3>${item.name}</h3>
-            <p>${item.hotel_name} · ${item.source_label}</p>
-            ${roomLine}
-            ${tagsLine}
-            <p>Current: ${fmtPrice(item.currency, item.last_price)}</p>
-            ${item.last_price_note ? `<p class="hint">${item.last_price_note}</p>` : ''}
-            <p>Target: ${item.threshold_price ? fmtPrice(item.currency, item.threshold_price) : 'Not set'}</p>
-            <p>Minimum reasonable price: ${item.min_expected_price ? fmtPrice(item.currency, item.min_expected_price) : 'Not set'}</p>
-            <p>Polling interval: ${item.poll_interval_minutes || 5} min (with a small built-in stagger)</p>
-            <p>Last check: ${fmtDateTimeUtc8(item.last_checked_at)}</p>
-            <p>Expected next check: ${fmtDateTimeUtc8(item.next_check_at)} <span class="countdown-text" data-next-check-at="${item.next_check_at || ''}">${fmtCountdown(item.next_check_at)}</span></p>
-            <p>Status: ${item.last_error ? `Error - ${item.last_error}` : 'OK'}</p>
-            <div class="watcher-toolbar">
-              <button data-id="${item.id}" data-action="edit" class="secondary">Edit</button>
-              <button data-id="${item.id}" data-action="open" class="secondary">Open link</button>
-              <button data-id="${item.id}" data-action="copy-link" class="secondary">Copy link</button>
-              <button data-id="${item.id}" data-action="check"${watcherActionAttrs(item.id, 'check')}>${watcherActionText(item.id, 'check', 'Check now')}</button>
-              <button data-id="${item.id}" data-action="toggle"${watcherActionAttrs(item.id, 'toggle', 'secondary')}>${watcherActionText(item.id, 'toggle', item.is_active ? 'Pause' : 'Enable')}</button>
-              <button data-id="${item.id}" data-action="delete"${watcherActionAttrs(item.id, 'delete', 'danger')}>${watcherActionText(item.id, 'delete', 'Delete')}</button>
+            <div class="watcher-top">
+              <div class="watcher-title-block">
+                <h3>${item.name}</h3>
+                <p>${item.hotel_name} · ${item.source_label}</p>
+                ${roomLine}
+                ${tagsLine}
+              </div>
+              <div class="watcher-price-hero">
+                <span class="watcher-price-label">Current Price</span>
+                <strong class="watcher-price-value ${currentPriceAvailable ? '' : 'is-unavailable'}">${currentPriceValue}</strong>
+                <span class="watcher-price-subtitle">${currentPriceSubtitle}</span>
+              </div>
             </div>
-            <div class="trend-block">
+            ${item.last_price_note ? `<p class="hint">${item.last_price_note}</p>` : ''}
+            <div class="trend-block trend-block-top">
               <div class="trend-head">
-                <div class="trend-title">Recent price trend</div>
+                <div class="trend-title">Recent Price Trend</div>
                 <div class="trend-low">
-                  Lowest price since monitoring started: <strong>${lowestInfo ? fmtPrice(item.currency, lowestInfo.price) : 'No data yet'}</strong>
+                  All-time low since monitoring started: <strong>${lowestInfo ? fmtPrice(item.currency, lowestInfo.price) : 'No data'}</strong>
                   <span>${lowestInfo ? `Seen at ${fmtDateTimeUtc8(lowestInfo.checked_at)}` : ''}</span>
                 </div>
               </div>
+              <div class="trend-toolbar">
+                ${['7d', '30d', 'all'].map((key) => `<button type="button" class="trend-chip ${trendWindow === key ? 'is-active' : ''}" data-id="${item.id}" data-action="trend-window" data-window="${key}">${trendWindowLabel(key)}</button>`).join('')}
+              </div>
               ${chart}
+            </div>
+            <div class="watcher-stats">
+              <div class="watcher-stat">
+                <span class="watcher-stat-label">Target</span>
+                <strong class="watcher-stat-value">${item.threshold_price ? fmtPrice(item.currency, item.threshold_price) : 'Not set'}</strong>
+              </div>
+              <div class="watcher-stat">
+                <span class="watcher-stat-label">Min Reasonable</span>
+                <strong class="watcher-stat-value">${item.min_expected_price ? fmtPrice(item.currency, item.min_expected_price) : 'Not set'}</strong>
+              </div>
+              <div class="watcher-stat">
+                <span class="watcher-stat-label">Polling</span>
+                <strong class="watcher-stat-value">${item.poll_interval_minutes || 5} min</strong>
+              </div>
+              <div class="watcher-stat">
+                <span class="watcher-stat-label">Status</span>
+                <strong class="watcher-stat-value ${item.last_error ? 'is-danger' : 'is-success'}">${statusText}</strong>
+              </div>
+            </div>
+            <div class="watcher-meta-lines">
+              <p>Last check: ${fmtDateTimeUtc8(item.last_checked_at)}</p>
+              <p>Next check: ${fmtDateTimeUtc8(item.next_check_at)} <span class="countdown-text" data-next-check-at="${item.next_check_at || ''}">${fmtCountdown(item.next_check_at)}</span></p>
+            </div>
+            ${policyBits.length ? `<p class="hint">Alert policy: ${policyBits.join('; ')}</p>` : ''}
+            ${latestEvent ? `<p class="hint">Last alert: ${fmtDateTimeUtc8(latestEvent.notified_at)} · ${latestEvent.reason === 'threshold_hit' ? 'target hit' : 'price drop'} · ${fmtPrice(item.currency, latestEvent.price)}</p>` : ''}
+            <div class="watcher-toolbar">
+              <button data-id="${item.id}" data-action="check"${watcherActionAttrs(item.id, 'check', 'action-primary')}>${watcherActionText(item.id, 'check', 'Check Now')}</button>
+              <button data-id="${item.id}" data-action="edit" class="action-secondary">Edit</button>
+              <button data-id="${item.id}" data-action="copy-link" class="action-secondary">Copy Link</button>
+              <button data-id="${item.id}" data-action="open" class="action-secondary">Open Link</button>
+              <button data-id="${item.id}" data-action="toggle"${watcherActionAttrs(item.id, 'toggle', 'action-secondary')}>${watcherActionText(item.id, 'toggle', item.is_active ? 'Pause' : 'Enable')}</button>
+              <button data-id="${item.id}" data-action="delete"${watcherActionAttrs(item.id, 'delete', 'danger')}>${watcherActionText(item.id, 'delete', 'Delete')}</button>
             </div>
           </div>`;
         root.appendChild(div);
@@ -613,26 +1012,34 @@
       }
       const data = await request('/api/watchers');
       currentWatchers = data.items || [];
-      document.getElementById('meta').textContent = `Each watcher can use its own minute-level polling interval. Actual runs are slightly staggered automatically.`;
-      const buildInfo = document.getElementById('build-info');
-      if (buildInfo && data.build_version) buildInfo.textContent = `Page version: ${data.build_version}`;
+      document.getElementById('meta').textContent = 'Each watcher can use its own minute-level polling interval. Actual execution includes a small amount of jitter to spread requests out.';
       renderWatchers();
     }
 
     document.getElementById('copy-debug').addEventListener('click', async () => {
-      if (!latestDebugText) return showToast('There are no diagnostics to copy right now', true);
+      if (!latestDebugText) return showToast('There is no diagnostic output to copy right now', true);
       try { await navigator.clipboard.writeText(latestDebugText); showToast('Diagnostics copied'); }
-      catch (_) { showToast('Copy failed. Please copy it manually', true); }
+      catch (_) { showToast('Copy failed. Please copy it manually.', true); }
     });
 
     document.getElementById('hide-debug').addEventListener('click', clearDebug);
     document.getElementById('source_type').addEventListener('change', () => { updatePresetHint(); updateLoginPanel(); });
+    document.getElementById('room_type_keyword').addEventListener('input', () => { updateRoomKeywordHint(); });
+    document.getElementById('notify_type').addEventListener('change', () => { updateNotifyTargetHint(); });
+    document.getElementById('notify_target').addEventListener('input', () => { validateNotifyTarget(); });
+    document.getElementById('telegram_bot_token').addEventListener('input', () => { validateNotifyTarget(); });
+    document.getElementById('telegram_chat_id').addEventListener('input', () => { validateNotifyTarget(); });
 
     document.getElementById('test-notify').addEventListener('click', async (event) => {
       const restore = setButtonLoading(event.currentTarget, 'Sending...');
-      const webhook = document.getElementById('notify_target').value.trim();
+      const webhook = composeNotifyTarget();
       const notifyType = document.getElementById('notify_type').value;
-      setStatus('form-status', 'Sending a test notification...');
+      if (!validateNotifyTarget({ strict: true })) {
+        restore();
+        setStatus('form-status', 'Notification config is incomplete. Please finish it first.', true);
+        return showToast('Notification config is incomplete. Please finish it first.', true);
+      }
+      setStatus('form-status', 'Sending test notification...');
       clearDebug();
       try {
         await request('/api/test-notify', { method: 'POST', body: JSON.stringify({ notify_target: webhook, notify_type: notifyType }) });
@@ -641,23 +1048,26 @@
       } catch (error) {
         setStatus('form-status', error.message, true);
         renderDebug(error, { action: 'test_notify', webhook, notify_type: notifyType });
-        showToast('Test notification failed. Diagnostics are shown below.', true);
+        showToast('Test notification failed. Expanded diagnostics are shown.', true);
       } finally { restore(); }
     });
 
     document.getElementById('watcher-form').addEventListener('submit', async (event) => {
       event.preventDefault();
+      if (!updateRoomKeywordHint()) {
+        setStatus('form-status', 'Use the full room name from the page before saving', true);
+        return showToast('The room name is too vague. Use the full room name.', true);
+      }
+      if (!validateNotifyTarget({ strict: true })) {
+        setStatus('form-status', 'Notification config is incomplete. Please finish it first.', true);
+        return showToast('Notification config is incomplete. Please finish it first.', true);
+      }
       const restore = setButtonLoading(document.getElementById('submit-btn'), 'Saving...');
       const form = new FormData(event.target);
       const payload = Object.fromEntries(form.entries());
+      payload.notify_target = composeNotifyTarget();
       payload.use_app_session_profile = true;
-      if (payload.request_headers && payload.request_headers.trim()) {
-        try { JSON.parse(payload.request_headers); } catch (_) {
-          restore();
-          setStatus('form-status', 'Request headers JSON is invalid', true);
-          return showToast('Custom request headers JSON is invalid', true);
-        }
-      }
+      payload.notify_only_target_hit = document.getElementById('notify_only_target_hit').checked;
       clearDebug();
       try {
         const isEdit = Boolean(payload.edit_id);
@@ -665,13 +1075,14 @@
         if (isEdit) payload.id = Number(payload.edit_id);
         await request(url, { method: 'POST', body: JSON.stringify(payload) });
         await loadWatchers();
-        resetFormMode();
-        setStatus('form-status', isEdit ? 'Watcher updated' : 'Watcher created. Your form values were kept.');
-        showToast(isEdit ? 'Watcher updated' : 'Watcher created. Your form values were kept.');
+        resetWatcherFormFields();
+        closeWatcherModal();
+        setStatus('form-status', isEdit ? 'Watcher updated' : 'Watcher created');
+        showToast(isEdit ? 'Watcher updated' : 'Watcher created');
       } catch (error) {
         setStatus('form-status', error.message, true);
         renderDebug(error, { action: 'create_watcher', payload });
-        showToast('Failed to create the watcher. Diagnostics are shown below.', true);
+        showToast('Failed to save the watcher. Expanded diagnostics are shown.', true);
       } finally { restore(); }
     });
 
@@ -684,7 +1095,7 @@
       } catch (error) {
         setStatus('list-status', error.message, true);
         renderDebug(error, { action: 'refresh_watchers' });
-        showToast('Refresh failed. Diagnostics are shown below.', true);
+        showToast('Refresh failed. Expanded diagnostics are shown.', true);
       } finally { restore(); }
     });
 
@@ -694,25 +1105,33 @@
       const id = Number(button.dataset.id);
       const action = button.dataset.action;
       const item = currentWatchers.find((entry) => Number(entry.id) === id);
+      if (action === 'trend-window') {
+        trendWindowByWatcher.set(id, button.dataset.window || '30d');
+        renderWatchers();
+        return;
+      }
       if (action === 'delete') {
-        if (!window.confirm('Are you sure you want to delete this watcher? Its price history will be removed too.')) return;
+        if (!window.confirm('Delete this watcher? Its price history will also be removed.')) return;
       }
       if (action === 'edit') {
-        if (item) fillFormForEdit(item);
-        setStatus('list-status', 'Loaded into the edit form');
-        return showToast('Loaded into the edit form');
+        if (item) {
+          fillFormForEdit(item);
+          openWatcherModal('edit');
+        }
+        setStatus('list-status', 'Watcher loaded into the edit form');
+        return showToast('Watcher loaded into the edit form');
       }
       if (action === 'open') {
         if (item?.target_url) window.open(item.target_url, '_blank');
-        setStatus('list-status', 'Hotel URL opened');
-        return showToast('Hotel URL opened');
+        setStatus('list-status', 'Hotel link opened');
+        return showToast('Hotel link opened');
       }
       if (action === 'copy-link') {
-        try { await navigator.clipboard.writeText(item?.target_url || ''); showToast('Hotel URL copied'); setStatus('list-status', 'Hotel URL copied'); }
+        try { await navigator.clipboard.writeText(item?.target_url || ''); showToast('Hotel link copied'); setStatus('list-status', 'Hotel link copied'); }
         catch (_) { showToast('Failed to copy the link', true); setStatus('list-status', 'Failed to copy the link', true); }
         return;
       }
-      const loadingText = action === 'check' ? 'Checking...' : action === 'delete' ? 'Deleting...' : 'Processing...';
+      const loadingText = action === 'check' ? 'Checking...' : action === 'delete' ? 'Deleting...' : 'Working...';
       const restore = setButtonLoading(button, loadingText);
       if (action === 'check' || action === 'toggle' || action === 'delete') markWatcherActionPending(id, action, loadingText);
       clearDebug();
@@ -720,8 +1139,8 @@
         if (action === 'check') {
           setStatus('list-status', 'Checking the latest price. Please wait...');
           const result = await request('/api/check-now', { method: 'POST', body: JSON.stringify({ id }) });
-          const note = result.price_note ? `（${result.price_note}）` : '';
-          const text = result.notified ? `Notification sent. Latest price: ${result.price}${note}` : `Check complete. Latest price: ${result.price}${note}`;
+          const note = result.price_note ? `（${result.price_note})` : '';
+          const text = result.notified ? `Alert sent. Latest price ${result.price}${note}` : `Check completed. Latest price ${result.price}${note}`;
           setStatus('list-status', text); showToast(text);
         }
         if (action === 'toggle') {
@@ -736,7 +1155,7 @@
       } catch (error) {
         setStatus('list-status', error.message, true);
         renderDebug(error, { action, id });
-        showToast('Action failed. Diagnostics are shown below', true);
+        showToast('Action failed. Expanded diagnostics are shown.', true);
       } finally {
         if (action === 'check' || action === 'toggle' || action === 'delete') clearWatcherActionPending(id, action);
         restore();
@@ -750,12 +1169,12 @@
       clearDebug();
       try {
         const data = await request('/api/start-ctrip-login', { method: 'POST', body: JSON.stringify({ source_type, target_url }) });
-        setStatus('session-status', data.message || 'The sign-in window is open');
-        showToast(data.message || 'The sign-in window is open');
+        setStatus('session-status', data.message || 'Login window opened');
+        showToast(data.message || 'Login window opened');
       } catch (error) {
         setStatus('session-status', error.message, true);
         renderDebug(error, { action: 'start_app_login', source_type, target_url });
-        showToast('Failed to open the sign-in window. Diagnostics are shown below', true);
+        showToast('Failed to open the login window. Expanded diagnostics are shown.', true);
       } finally { restore(); loadAppSessionStatus(); }
     });
 
@@ -770,39 +1189,62 @@
       } catch (error) {
         setStatus('session-status', error.message, true);
         renderDebug(error, { action: 'finish_app_login', source_type: currentSessionPlatform() || 'ctrip' });
-        showToast('Failed to save the session. Diagnostics are shown below', true);
+        showToast('Failed to save the session. Expanded diagnostics are shown.', true);
       } finally { restore(); loadAppSessionStatus(); }
     });
 
     document.getElementById('verify-app-session').addEventListener('click', async (event) => {
       const restore = setButtonLoading(event.currentTarget, 'Verifying...');
       const source_type = document.getElementById('source_type').value;
-      const target_url = document.getElementById('target_url').value.trim();
-      const request_headers = document.getElementById('request_headers').value.trim();
-      if (!target_url) {
-        restore(); setStatus('session-status', 'Please enter a hotel URL first', true); return showToast('Please enter a hotel URL first', true);
-      }
+      const target_url = document.getElementById('target_url').value.trim() || sessionPlatformMeta(source_type).defaultUrl;
       clearDebug();
       try {
-        const data = await request('/api/verify-app-session', { method: 'POST', body: JSON.stringify({ source_type, target_url, request_headers, cookie: '' }) });
-        setStatus('session-status', data.message || 'Dedicated session is ready');
-        showToast(data.message || 'Dedicated session is ready');
+        const data = await request('/api/verify-app-session', { method: 'POST', body: JSON.stringify({ source_type, target_url, request_headers: '', cookie: '' }) });
+        setStatus('session-status', data.message || 'Dedicated session is available');
+        showToast(data.message || 'Dedicated session is available');
       } catch (error) {
         setStatus('session-status', error.message, true);
         renderDebug(error, { action: 'verify_app_session', source_type, target_url });
-        showToast('Session verification failed. Diagnostics are shown below', true);
+        showToast('Session verification failed. Expanded diagnostics are shown.', true);
       } finally {
         restore();
       }
     });
 
+    document.getElementById('open-create-modal').addEventListener('click', () => {
+      openWatcherModal('create');
+    });
+
+    document.getElementById('open-session-modal').addEventListener('click', () => {
+      openSessionModal();
+    });
+
+    document.getElementById('close-watcher-modal').addEventListener('click', () => {
+      closeWatcherModal();
+    });
+
+    document.getElementById('close-session-modal').addEventListener('click', () => {
+      closeSessionModal();
+    });
+
     document.getElementById('cancel-edit-btn').addEventListener('click', () => {
-      document.getElementById('watcher-form').reset();
-      document.getElementById('room_type_meta').value = '';
-      document.querySelector('input[name="poll_interval_minutes"]').value = 5;
-      resetFormMode();
-      updatePresetHint();
+      resetWatcherFormFields();
       updateLoginPanel();
+      closeWatcherModal();
+    });
+
+    document.getElementById('watcher-modal').addEventListener('click', (event) => {
+      if (event.target.id === 'watcher-modal') closeWatcherModal();
+    });
+
+    document.getElementById('session-modal').addEventListener('click', (event) => {
+      if (event.target.id === 'session-modal') closeSessionModal();
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') return;
+      if (watcherModalOpen) closeWatcherModal();
+      if (sessionModalOpen) closeSessionModal();
     });
 
     setSectionBooting('settings', true);
@@ -813,16 +1255,18 @@
       const failed = results.find((item) => item.status === 'rejected');
       if (!document.querySelector('input[name="poll_interval_minutes"]').value) document.querySelector('input[name="poll_interval_minutes"]').value = 5;
       updateLoginPanel();
+      updateRoomKeywordHint();
+      updateNotifyTargetHint();
       setSectionBooting('settings', false);
       if (failed && failed.reason) {
-        setStatus('form-status', failed.reason.message || 'Failed to initialize the settings panel', true);
+        setStatus('form-status', failed.reason.message || 'Failed to initialize the settings area', true);
       }
     });
 
     loadWatchers({ silent: true }).catch((error) => {
       setStatus('list-status', error.message, true);
       renderDebug(error, { action: 'initial_watchers_load' });
-      showToast('Failed to initialize the watcher list. Diagnostics are shown below.', true);
+      showToast('Failed to initialize the watcher list. Expanded diagnostics are shown.', true);
     }).finally(() => {
       setSectionBooting('watchers', false);
     });

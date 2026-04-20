@@ -32,6 +32,11 @@ class RepositoryTests(unittest.TestCase):
             'notify_target': 'https://open.feishu.cn/test',
             'threshold_price': 2000.0,
             'min_expected_price': 1500.0,
+            'quiet_hours_start': '23:00',
+            'quiet_hours_end': '07:00',
+            'daily_notification_limit': 2,
+            'notify_only_target_hit': True,
+            'min_price_drop_amount': 100.0,
             'poll_interval_minutes': 5,
             'request_headers': '{"X-Test": "1"}',
             'cookie': 'a=1; b=2',
@@ -43,6 +48,8 @@ class RepositoryTests(unittest.TestCase):
         self.assertIsNotNone(watcher)
         self.assertEqual(watcher.name, 'Test Task')
         self.assertIn('Cookie', watcher.parsed_headers())
+        self.assertEqual(watcher.daily_notification_limit, 2)
+        self.assertEqual(watcher.min_price_drop_amount, 100.0)
 
         repository.update_watcher(watcher_id, {
             'name': 'Test Task2',
@@ -57,6 +64,11 @@ class RepositoryTests(unittest.TestCase):
             'notify_target': 'https://open.feishu.cn/test2',
             'threshold_price': 1800.0,
             'min_expected_price': 1400.0,
+            'quiet_hours_start': '',
+            'quiet_hours_end': '',
+            'daily_notification_limit': 0,
+            'notify_only_target_hit': False,
+            'min_price_drop_amount': '',
             'poll_interval_minutes': 10,
             'request_headers': '{}',
             'cookie': '',
@@ -66,6 +78,7 @@ class RepositoryTests(unittest.TestCase):
         updated = repository.find_watcher(watcher_id)
         self.assertEqual(updated.name, 'Test Task2')
         self.assertEqual(updated.poll_interval_minutes, 10)
+        self.assertEqual(updated.daily_notification_limit, 0)
 
         repository.set_watcher_active(watcher_id, 0)
         toggled = repository.find_watcher(watcher_id)
@@ -81,6 +94,10 @@ class RepositoryTests(unittest.TestCase):
         low = repository.find_watcher(watcher_id)
         self.assertEqual(low.all_time_low_price, 1688.0)
         self.assertIsNotNone(low.all_time_low_at)
+        repository.append_notification_event(watcher_id, 1688.0, 'threshold_hit', repository.utc_now())
+        events = repository.list_notification_events(watcher_id)
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0]['reason'], 'threshold_hit')
 
         repository.delete_watcher(watcher_id)
         self.assertIsNone(repository.find_watcher(watcher_id))
