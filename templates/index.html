@@ -721,6 +721,7 @@
       const rawMin = Math.min(...values);
       const rawMax = Math.max(...values);
       const rawSpan = rawMax - rawMin;
+      const lowPointThreshold = 0.001;
       const padding = rawSpan > 0 ? Math.max(rawSpan * 0.18, 1) : Math.max(rawMin * 0.015, 8);
       const min = Math.max(0, rawMin - padding);
       const max = rawMax + padding;
@@ -768,6 +769,7 @@
           <div class="chart-legend">
             <span><i class="legend-dot trend-line-dot"></i>Price points</span>
             <span><i class="legend-dot trend-drop-dot"></i>Lower than previous</span>
+            <span><i class="legend-dot trend-low-dot"></i>All-time low</span>
             <span><i class="legend-dot trend-notify-dot"></i>Alert events</span>
           </div>
           <div class="chart-tooltip" hidden>Hover over a point for details</div>
@@ -787,7 +789,8 @@
             ${eventDots.map((event) => `<circle cx="${event.x}" cy="${event.y}" r="5" fill="${event.reason === 'threshold_hit' ? '#dc2626' : '#f59e0b'}" stroke="#fff" stroke-width="1.4" opacity="0.98" />`).join('')}
             ${items.map((item, index) => `
               <g class="spark-point-group">
-                <circle cx="${getX(index)}" cy="${getY(item.price)}" r="${index > 0 && item.price < items[index - 1].price ? '3.5' : '2.5'}" fill="${index > 0 && item.price < items[index - 1].price ? '#16a34a' : '#2563eb'}" />
+                ${Math.abs(item.price - rawMin) < lowPointThreshold ? `<circle class="spark-low-ring" cx="${getX(index)}" cy="${getY(item.price)}" r="7" />` : ''}
+                <circle cx="${getX(index)}" cy="${getY(item.price)}" r="${Math.abs(item.price - rawMin) < lowPointThreshold ? '4.2' : index > 0 && item.price < items[index - 1].price ? '3.5' : '2.5'}" fill="${Math.abs(item.price - rawMin) < lowPointThreshold ? '#dc2626' : index > 0 && item.price < items[index - 1].price ? '#16a34a' : '#2563eb'}" />
                 <circle
                   class="spark-hotspot"
                   cx="${getX(index)}"
@@ -797,8 +800,9 @@
                   data-price="${formatPointPrice(item.price)}"
                   data-time="${fmtFullTimeUtc8(item.checked_at)}"
                   data-event="${eventDots.find((event) => Math.abs(event.x - getX(index)) < 4 && Math.abs(event.y - getY(item.price)) < 4)?.reason || ''}"
+                  data-low="${Math.abs(item.price - rawMin) < lowPointThreshold ? '1' : ''}"
                 >
-                  <title>${fmtFullTimeUtc8(item.checked_at)} · ¥${formatPointPrice(item.price)}</title>
+                  <title>${fmtFullTimeUtc8(item.checked_at)} · ¥${formatPointPrice(item.price)}${Math.abs(item.price - rawMin) < lowPointThreshold ? ' · all-time low' : ''}</title>
                 </circle>
               </g>`).join('')}
             <text x="${Math.min(leftPad + plotWidth - 4, Math.max(leftPad + 90, getX(items.length - 1) + 16))}" y="${Math.max(topPad + 16, getY(last.price) - 14)}" text-anchor="end" font-size="12" font-weight="700" fill="#1d4ed8">Latest ${lastPriceLabel}</text>
@@ -874,16 +878,34 @@
       document.querySelectorAll('.chart-wrap').forEach((wrap) => {
         const tooltip = wrap.querySelector('.chart-tooltip');
         if (!tooltip) return;
+        const positionTooltip = (event) => {
+          const wrapRect = wrap.getBoundingClientRect();
+          const tooltipRect = tooltip.getBoundingClientRect();
+          const offsetX = 14;
+          const offsetY = 14;
+          const maxLeft = Math.max(8, wrapRect.width - tooltipRect.width - 8);
+          const maxTop = Math.max(8, wrapRect.height - tooltipRect.height - 8);
+          const left = Math.min(Math.max(8, event.clientX - wrapRect.left + offsetX), maxLeft);
+          const top = Math.min(Math.max(8, event.clientY - wrapRect.top - tooltipRect.height - offsetY), maxTop);
+          tooltip.style.left = `${left}px`;
+          tooltip.style.top = `${top}px`;
+        };
         wrap.querySelectorAll('.spark-hotspot').forEach((point) => {
-          point.addEventListener('mouseenter', () => {
+          if (point.dataset.tooltipBound === '1') return;
+          point.dataset.tooltipBound = '1';
+          const showTooltip = (event) => {
             const eventText = point.dataset.event === 'threshold_hit'
               ? ' · target-hit alert sent'
               : point.dataset.event === 'price_drop'
                 ? ' · price-drop alert sent'
                 : '';
-            tooltip.textContent = `${point.dataset.time} · ¥${point.dataset.price}${eventText}`;
+            const lowText = point.dataset.low === '1' ? ' · all-time low' : '';
+            tooltip.textContent = `${point.dataset.time} · ¥${point.dataset.price}${lowText}${eventText}`;
             tooltip.hidden = false;
-          });
+            positionTooltip(event);
+          };
+          point.addEventListener('mouseenter', showTooltip);
+          point.addEventListener('mousemove', showTooltip);
           point.addEventListener('mouseleave', () => {
             tooltip.hidden = true;
           });

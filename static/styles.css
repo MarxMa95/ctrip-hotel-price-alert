@@ -318,13 +318,14 @@ button.small {
   color: #9a3412;
 }
 .chart-wrap {
+  position: relative;
   width: 100%;
   max-width: 100%;
   padding: 12px 14px 10px;
   border: 1px solid var(--border);
   border-radius: 12px;
   background: #fcfdff;
-  overflow: hidden;
+  overflow: visible;
 }
 .chart-caption {
   font-size: 12px;
@@ -353,17 +354,33 @@ button.small {
 }
 .trend-line-dot { background: #2563eb; }
 .trend-drop-dot { background: #16a34a; }
+.trend-low-dot { background: #dc2626; }
 .trend-notify-dot { background: #f59e0b; }
 .chart-tooltip {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  z-index: 3;
   min-height: 18px;
-  margin-bottom: 6px;
+  max-width: min(280px, calc(100% - 16px));
+  padding: 7px 10px;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.94);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
   font-size: 12px;
-  color: #1d4ed8;
+  color: #f8fafc;
   font-weight: 600;
+  pointer-events: none;
+  white-space: nowrap;
 }
 .chart-tooltip[hidden] {
   visibility: hidden;
   display: block;
+}
+.spark-low-ring {
+  fill: rgba(220, 38, 38, 0.12);
+  stroke: #dc2626;
+  stroke-width: 1.8;
 }
 .spark-hotspot {
   cursor: pointer;
