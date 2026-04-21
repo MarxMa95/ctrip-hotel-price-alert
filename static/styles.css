@@ -320,15 +320,16 @@ button.small {
 .chart-wrap {
   width: 100%;
   max-width: 100%;
-  padding: 10px 12px 8px;
+  padding: 12px 14px 10px;
   border: 1px solid var(--border);
   border-radius: 12px;
   background: #fcfdff;
+  overflow: hidden;
 }
 .chart-caption {
   font-size: 12px;
   color: var(--muted);
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 .chart-legend {
   display: flex;
@@ -364,12 +365,18 @@ button.small {
 }
 .sparkline {
   width: 100%;
-  height: 132px;
+  height: auto;
+  aspect-ratio: 640 / 240;
+  min-height: 220px;
   display: block;
 }
 .spark-empty {
   color: var(--muted);
   font-size: 12px;
+  min-height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .countdown-text {
   color: var(--primary);
