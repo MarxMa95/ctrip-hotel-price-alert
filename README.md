@@ -106,11 +106,24 @@ This launcher will:
 - `Run Core Checks.command`
 - `Environment Check.command`
 - `Pre-Publish Check.command`
+- `scripts/release_minor.sh`
 
 You can also refresh desktop wrappers:
 
 ```bash
 ./scripts/refresh_desktop_shortcuts.sh
+```
+
+Create the next minor release automatically:
+
+```bash
+./scripts/release_minor.sh
+```
+
+Preview the next version without changing anything:
+
+```bash
+./scripts/release_minor.sh --dry-run
 ```
 
 ## Installation
