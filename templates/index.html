@@ -733,13 +733,19 @@
       const last = items[items.length - 1];
       const first = items[0];
       const yTicks = yTickValues.map((value) => ({ value, y: getY(value) }));
-      const priceDecimals = span < 3 ? 1 : 0;
+      const priceDecimals = span < 1 ? 2 : span < 5 ? 1 : 0;
       const formatAxisPrice = (value) => `¥${Number(value).toLocaleString('en-US', { minimumFractionDigits: priceDecimals, maximumFractionDigits: priceDecimals })}`;
+      const formatPointPrice = (value) => Number(value).toLocaleString('en-US', { minimumFractionDigits: priceDecimals, maximumFractionDigits: priceDecimals });
       const lastPriceLabel = Number.isFinite(last.price) ? formatAxisPrice(last.price) : '';
       const gradientId = `spark-gradient-${Math.random().toString(36).slice(2, 8)}`;
       const firstTimeLabel = fmtShortTimeUtc8(first.checked_at);
       const lastTimeLabel = fmtShortTimeUtc8(last.checked_at);
       const showEndLabels = items.length > 1 && firstTimeLabel !== lastTimeLabel;
+      const chartNote = items.length === 1
+        ? 'Only 1 sample point is available so far. Keep monitoring to build a fuller trend line.'
+        : rawSpan < 5
+          ? `Price movement is currently very small, so the chart is zoomed to ${priceDecimals === 2 ? '0.01' : '0.1'} precision`
+          : '';
       const eventDots = (notificationEvents || [])
         .map((event) => {
           const eventDate = parseUtcValue(event.notified_at);
@@ -758,6 +764,7 @@
       return `
         <div class="chart-wrap">
           <div class="chart-caption">X axis: check time · Y axis: price (CNY)</div>
+          ${chartNote ? `<div class="chart-note">${chartNote}</div>` : ''}
           <div class="chart-legend">
             <span><i class="legend-dot trend-line-dot"></i>Price points</span>
             <span><i class="legend-dot trend-drop-dot"></i>Lower than previous</span>
@@ -787,11 +794,11 @@
                   cy="${getY(item.price)}"
                   r="8"
                   fill="transparent"
-                  data-price="${Math.round(item.price)}"
+                  data-price="${formatPointPrice(item.price)}"
                   data-time="${fmtFullTimeUtc8(item.checked_at)}"
                   data-event="${eventDots.find((event) => Math.abs(event.x - getX(index)) < 4 && Math.abs(event.y - getY(item.price)) < 4)?.reason || ''}"
                 >
-                  <title>${fmtFullTimeUtc8(item.checked_at)} · ¥${Math.round(item.price)}</title>
+                  <title>${fmtFullTimeUtc8(item.checked_at)} · ¥${formatPointPrice(item.price)}</title>
                 </circle>
               </g>`).join('')}
             <text x="${Math.min(leftPad + plotWidth - 4, Math.max(leftPad + 90, getX(items.length - 1) + 16))}" y="${Math.max(topPad + 16, getY(last.price) - 14)}" text-anchor="end" font-size="12" font-weight="700" fill="#1d4ed8">Latest ${lastPriceLabel}</text>
