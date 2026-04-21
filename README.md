@@ -1,60 +1,74 @@
-# Ctrip Hotel Price Alert
+# 携程酒店降价提醒工具 / Ctrip Hotel Price Alert
 
 [![Release](https://img.shields.io/github/v/release/MarxMa95/ctrip-hotel-price-alert)](https://github.com/MarxMa95/ctrip-hotel-price-alert/releases)
 [![License](https://img.shields.io/github/license/MarxMa95/ctrip-hotel-price-alert)](https://github.com/MarxMa95/ctrip-hotel-price-alert/blob/main/LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
 [![Platform](https://img.shields.io/badge/platform-macOS-lightgrey)](https://www.apple.com/macos/)
 
-A local-first hotel price monitoring app for `Ctrip`, built for room-specific tracking, flexible IM notifications, and quick setup on your own machine.
+一个 `local-first` 的携程酒店价格监控工具。
+它不是只盯“酒店均价”，而是可以精确监控你关心的具体房型，并在价格下降或达到目标价时，通过你常用的 IM 工具推送提醒。
+
+> 适合已经选定酒店和房型、只想蹲一个更合适价格的人。
 
 Release policy: each shipped update gets a new GitHub release tag. The current release is `v1.1.0`, and subsequent feature updates continue as `v1.2.0`, `v1.3.0`, and so on.
 
-## Why this project
+## 为什么做这个项目 / Why this project
 
-Most hotel price trackers only watch a listing at the hotel level. This project is built for the more practical case:
+很多酒店价格提醒工具只能按“酒店级”监控。
+但真实场景里，大家真正关心的通常是：
 
-- track a specific room type instead of the whole hotel
-- keep monitoring from your own machine and browser session
-- send alerts to the IM tool you already use
-- review recent price trend, all-time low, and latest low occurrence time
+- 我想住的那个房型有没有降价
+- 价格是不是已经到我的心理价位
+- 订完之后有没有更低价值得重新下单
+- 能不能直接把提醒发到我已经在用的消息工具里
 
-## Key Features
+这个项目就是为这个场景做的：
 
-- Room-specific monitoring by room name keyword
-- Multiple notification channels:
+- 按房型监控，而不是只看整家酒店
+- 本地运行，账号会话和运行数据保留在自己机器上
+- 支持飞书、企微、Slack、Discord、Telegram 等通知方式
+- 可以查看最近价格趋势、历史最低价和最低价最近出现时间
+
+## 核心特性 / Key features
+
+- 房型级监控
+  - 支持按房型名称关键词监控指定房型
+- 多通知渠道
   - `Feishu`
   - `WeCom`
   - `Slack`
   - `Discord`
   - `Telegram`
-- Separate alert behavior for:
-  - target price reached
-  - normal price drop
-- Trend chart with:
-  - recent 7-day / 30-day / full-history view
-  - all-time low price
-  - latest timestamp when that low price appeared
-- Full local history retention for newly collected data
-- Browser-session-assisted access for pages that require a valid signed-in session
-- Local-only runtime data: watchers, logs, and session material stay on your machine
+- 更实用的提醒策略
+  - 到达目标价提醒
+  - 普通降价提醒
+- 价格趋势可视化
+  - 最近 7 天 / 30 天 / 全历史价格趋势
+  - 历史最低价
+  - 最低价最近出现时间
+- 本地优先
+  - watcher、日志、session 等运行数据默认只保存在本机
+- 支持登录态页面
+  - 可通过本地浏览器登录流程保存并复用携程会话
 
-## Product Positioning
+## 项目定位 / Product positioning
 
-This project is designed to be:
+这个项目不是云端 SaaS，也不是“酒店全网比价平台”。
+它更像一个为个人使用设计的本地工具：
 
-- `Room-aware`: track the exact room you care about
-- `IM-flexible`: use the notification provider that fits your workflow
-- `Local-first`: keep your session and runtime data on your own device
-- `Practical`: start quickly without building a cloud service
+- `Room-aware`: 盯你真正想住的那个房型
+- `Local-first`: 会话和数据掌握在自己手里
+- `IM-flexible`: 提醒发到你已有的工作流里
+- `Practical`: 不需要先搭一整套云服务
 
-## Requirements
+## 运行环境 / Requirements
 
 - macOS
 - Python `3.11+`
 - `playwright`
-- A local Chrome / Chromium / Edge installation, or Playwright-managed Chromium
+- 本地 Chrome / Chromium / Edge，或 Playwright 安装的 Chromium
 
-Install the required browser dependency if needed:
+如需安装浏览器依赖：
 
 ```bash
 python3 -m pip install playwright
