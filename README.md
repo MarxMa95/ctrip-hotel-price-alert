@@ -7,6 +7,8 @@
 
 A local-first hotel price monitoring app for `Ctrip`, built for room-specific tracking, flexible IM notifications, and quick setup on your own machine.
 
+Release policy: each shipped update gets a new GitHub release tag. The current release is `v1.1.0`, and subsequent feature updates continue as `v1.2.0`, `v1.3.0`, and so on.
+
 ## Why this project
 
 Most hotel price trackers only watch a listing at the hotel level. This project is built for the more practical case:
